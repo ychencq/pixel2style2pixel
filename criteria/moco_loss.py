@@ -58,9 +58,9 @@ class MocoLoss(nn.Module):
             diff_target = y_hat_feats[i].dot(y_feats[i])
             diff_input = y_hat_feats[i].dot(x_feats[i])
             diff_views = y_feats[i].dot(x_feats[i])
-            sim_logs.append({'diff_target': float(diff_target),
-                             'diff_input': float(diff_input),
-                             'diff_views': float(diff_views)})
+            sim_logs.append({'diff_target': round(float(diff_target),4),
+                             'diff_input': round(float(diff_input),4),
+                             'diff_views': round(float(diff_views),4)})
             loss += 1 - diff_target
             sim_diff = float(diff_target) - float(diff_views)
             sim_improvement += sim_diff

@@ -28,6 +28,13 @@ class TestOptions:
 		self.parser.add_argument('--resize_factors', type=str, default=None,
 		                         help='Downsampling factor for super-res (should be a single value for inference).')
 
+		# arguments for identity/similarity evaluation
+		self.parser.add_argument('--id_lambda', default=1, type=float, help='ID loss multiplier factor')
+		self.parser.add_argument('--moco_lambda', default=1, type=float, help='Moco-based feature similarity loss multiplier factor')
+		self.parser.add_argument('--input_nc', default=3, type=int,
+								 help='Number of input image channels to the psp encoder')
+		self.parser.add_argument('--label_nc', default=0, type=int,
+								 help='Number of input label channels to the psp encoder')
 	def parse(self):
 		opts = self.parser.parse_args()
 		return opts

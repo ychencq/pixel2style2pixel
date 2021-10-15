@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" autoUpload="Always" serverName="chenyifei@10.67.42.25:22" remoteFilesAllowedToDisappearOnAutoupload="false">
+    <serverData>
+      <paths name="10.67.42.25">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="chenyifei@10.67.42.25:22">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="chenyifei@10.67.42.25:22 (2)">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+    </serverData>
+    <option name="myAutoUpload" value="ALWAYS" />
+  </component>
+</project>

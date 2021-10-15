@@ -12,14 +12,21 @@ import sys
 sys.path.append(".")
 sys.path.append("..")
 
+from criteria import id_loss, w_norm,moco_loss
 from configs import data_configs
 from datasets.inference_dataset import InferenceDataset
 from utils.common import tensor2im, log_input_image
 from options.test_options import TestOptions
 from models.psp import pSp
+from datasets.images_dataset import ImagesDataset
 
 
 def run():
+    #----------------
+    device = 'cuda:0'
+    moco_loss_calculator = moco_loss.MocoLoss().to(device).eval()
+    id_loss_calculator = id_loss.IDLoss().to(device).eval()
+    # ---------------
     test_opts = TestOptions().parse()
 
     if test_opts.resize_factors is not None:
@@ -51,38 +58,70 @@ def run():
     net.cuda()
 
     print('Loading dataset for {}'.format(opts.dataset_type))
+    print('data path: {}'.format((opts.data_path)))
     dataset_args = data_configs.DATASETS[opts.dataset_type]
     transforms_dict = dataset_args['transforms'](opts).get_transforms()
-    dataset = InferenceDataset(root=opts.data_path,
-                               transform=transforms_dict['transform_inference'],
-                               opts=opts)
-    dataloader = DataLoader(dataset,
+
+    test_dataset = ImagesDataset(source_root=dataset_args['test_source_root'],
+                                 target_root=dataset_args['test_target_root'],
+                                 source_transform=transforms_dict['transform_source'],
+                                 target_transform=transforms_dict['transform_test'],
+                                 opts=opts)
+
+    test_dataloader = DataLoader(test_dataset,
                             batch_size=opts.test_batch_size,
                             shuffle=False,
                             num_workers=int(opts.test_workers),
                             drop_last=True)
 
+    # dataset = InferenceDataset(root=opts.data_path,
+    #                            transform=transforms_dict['transform_inference'],
+    #                            opts=opts)
+
+    # dataloader = DataLoader(dataset,
+    #                         batch_size=opts.test_batch_size,
+    #                         shuffle=False,
+    #                         num_workers=int(opts.test_workers),
+    #                         drop_last=True)
+
     if opts.n_images is None:
-        opts.n_images = len(dataset)
+        opts.n_images = len(test_dataset)
+        # opts.n_images = len(dataset)
 
     global_i = 0
     global_time = []
-    for input_batch in tqdm(dataloader):
+    # for input_batch in tqdm(dataloader):
+    # for input_batch in tqdm(test_dataloader):
+    for batch_idx,input_batch in enumerate(test_dataloader):
         if global_i >= opts.n_images:
             break
         with torch.no_grad():
-            input_cuda = input_batch.cuda().float()
+            input_cuda, gt_cuda = input_batch
+            input_cuda = input_cuda.cuda().float()
+            gt_cuda = gt_cuda.cuda().float()
             tic = time.time()
             result_batch = run_on_batch(input_cuda, net, opts)
+            #- Identity Loss ------
+            loss_moco, moco_sim_improvement, moco_logs = moco_loss_calculator(result_batch, gt_cuda, input_cuda)  # result_batch: inference   y:gt    x:input
+            loss_id, id_sim_improvement, id_logs = id_loss_calculator(result_batch, gt_cuda, input_cuda)
+            print('Batch {}:'.format(batch_idx))
+            print('    Moco: loss--{:.4f}    sim--{:.4f}    logs--{}'.format(loss_moco.item(),moco_sim_improvement,moco_logs))
+            print('    Identity: loss--{:.4f}    sim-{:.4f}    logs-{}\n'.format(loss_id.item(), id_sim_improvement, id_logs))
+            # print('    Moco: loss--{:.4f}    sim--{:.4f}'.format(loss_moco.item(),moco_sim_improvement,moco_logs))
+            # print('    Identity: loss--{:.4f}    sim-{:.4f}\n'.format(loss_id.item(), id_sim_improvement, id_logs))
+            #- --------------------
             toc = time.time()
             global_time.append(toc - tic)
 
+
+
         for i in range(opts.test_batch_size):
             result = tensor2im(result_batch[i])
-            im_path = dataset.paths[global_i]
-
+            # im_path = dataset.paths[global_i]
+            im_path = test_dataset.source_paths[global_i]
             if opts.couple_outputs or global_i % 100 == 0:
-                input_im = log_input_image(input_batch[i], opts)
+                # input_im = log_input_image(input_batch[i], opts)
+                input_im = log_input_image(input_cuda[i], opts)
                 resize_amount = (256, 256) if opts.resize_outputs else (opts.output_size, opts.output_size)
                 if opts.resize_factors is not None:
                     # for super resolution, save the original, down-sampled, and output
@@ -107,6 +146,7 @@ def run():
 
     with open(stats_path, 'w') as f:
         f.write(result_str)
+
 
 
 def run_on_batch(inputs, net, opts):
