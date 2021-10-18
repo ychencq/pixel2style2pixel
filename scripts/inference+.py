@@ -1,0 +1,187 @@
+import os
+from argparse import Namespace
+
+from tqdm import tqdm
+import time
+import numpy as np
+import torch
+from PIL import Image
+from torch.utils.data import DataLoader
+import sys
+from torch.autograd import Variable
+from torchvision import transforms
+import torch.backends.cudnn as cudnn
+import torchvision
+sys.path.append(".")
+sys.path.append("..")
+
+from criteria import id_loss, w_norm,moco_loss
+from configs import data_configs
+from datasets.inference_dataset import InferenceDataset
+from utils.common import tensor2im, log_input_image
+from options.test_options import TestOptions
+from models.psp import pSp
+from datasets.images_dataset import ImagesDataset
+
+import models.hopenet as hopenet
+import  utils.util_dhp as util_dhp
+
+def run():
+    #---------------- moco calculater
+    device = 'cuda:0'
+    moco_loss_calculator = moco_loss.MocoLoss().to(device).eval()
+    id_loss_calculator = id_loss.IDLoss().to(device).eval()
+    # ---------------
+    test_opts = TestOptions().parse()
+
+    if test_opts.resize_factors is not None:
+        assert len(
+            test_opts.resize_factors.split(',')) == 1, "When running inference, provide a single downsampling factor!"
+        out_path_results = os.path.join(test_opts.exp_dir, 'inference_results',
+                                        'downsampling_{}'.format(test_opts.resize_factors))
+        out_path_coupled = os.path.join(test_opts.exp_dir, 'inference_coupled',
+                                        'downsampling_{}'.format(test_opts.resize_factors))
+    else:
+        out_path_results = os.path.join(test_opts.exp_dir, 'inference_results')
+        out_path_coupled = os.path.join(test_opts.exp_dir, 'inference_coupled')
+
+    os.makedirs(out_path_results, exist_ok=True)
+    os.makedirs(out_path_coupled, exist_ok=True)
+
+    # update test options with options used during training
+    ckpt = torch.load(test_opts.checkpoint_path, map_location='cpu')
+    opts = ckpt['opts']
+    opts.update(vars(test_opts))
+    if 'learn_in_w' not in opts:
+        opts['learn_in_w'] = False
+    if 'output_size' not in opts:
+        opts['output_size'] = 1024
+    opts = Namespace(**opts)
+    # ---- psp mdeol -----------------------------------
+    net = pSp(opts)
+    net.eval()
+    net.cuda()
+    # --- DHP model -----------------------------------
+    print('loading deep head pose model')
+    hope_net = hopenet.Hopenet(torchvision.models.resnet.Bottleneck, [3, 4, 6, 3], 66)
+    dhp_snapshot_path = '/mnt/nas7/users/chenyifei/code/humanface/deep-head-pose/pretrained_models/hopenet_robust_alpha1.pkl'
+    dhp_saved_state_dict = torch.load(dhp_snapshot_path)
+    hope_net.load_state_dict(dhp_saved_state_dict)
+    # ----- Dataset -------------------------------------
+    print('Loading dataset for {}'.format(opts.dataset_type))
+    print('data path: {}'.format((opts.data_path)))
+    dataset_args = data_configs.DATASETS[opts.dataset_type]
+    transforms_dict = dataset_args['transforms'](opts).get_transforms()
+
+    test_dataset = ImagesDataset(source_root=dataset_args['test_source_root'],
+                                 target_root=dataset_args['test_target_root'],
+                                 source_transform=transforms_dict['transform_source'],
+                                 target_transform=transforms_dict['transform_test'],
+                                 opts=opts)
+
+    test_dataloader = DataLoader(test_dataset,
+                            batch_size=opts.test_batch_size,
+                            shuffle=False,
+                            num_workers=int(opts.test_workers),
+                            drop_last=True)
+
+    if opts.n_images is None:
+        opts.n_images = len(test_dataset)
+
+    # ---- inference ---------------------------------------
+    global_i = 0
+    global_time = []
+    for batch_idx,input_batch in enumerate(test_dataloader):
+        if global_i >= opts.n_images:
+            break
+        with torch.no_grad():
+            input_cuda, gt_cuda = input_batch
+            input_cuda = input_cuda.cuda().float()
+            gt_cuda = gt_cuda.cuda().float()
+            tic = time.time()
+            # - inference --------------
+            result_batch = run_on_batch(input_cuda, net, opts)
+            #- Identity Loss -----------
+            loss_moco, moco_sim_improvement, moco_logs = moco_loss_calculator(result_batch, gt_cuda, input_cuda)  # result_batch: inference   y:gt    x:input
+            loss_id, id_sim_improvement, id_logs = id_loss_calculator(result_batch, gt_cuda, input_cuda)
+            print('Batch {}:'.format(batch_idx))
+            print('    Moco: loss--{:.4f}    sim--{:.4f}    logs--{}'.format(loss_moco.item(),moco_sim_improvement,moco_logs))
+            print('    Identity: loss--{:.4f}    sim-{:.4f}    logs-{}\n'.format(loss_id.item(), id_sim_improvement, id_logs))
+            #- Angle estimator ---------
+            yaw, pitch, roll = hope_net(input_cuda)
+            _, yaw_bpred = torch.max(yaw.data, 1)
+            _, pitch_bpred = torch.max(pitch.data, 1)
+            _, roll_bpred = torch.max(roll.data, 1)
+            yaw_predicted = util_dhp.softmax_temperature(yaw.data, 1)
+            pitch_predicted = util_dhp.softmax_temperature(pitch.data, 1)
+            roll_predicted = util_dhp.softmax_temperature(roll.data, 1)
+            idx_tensor = [idx for idx in range(66)]
+            yaw_predicted = torch.sum(yaw_predicted * idx_tensor, 1).cpu() * 3 - 99
+            pitch_predicted = torch.sum(pitch_predicted * idx_tensor, 1).cpu() * 3 - 99
+            roll_predicted = torch.sum(roll_predicted * idx_tensor, 1).cpu() * 3 - 99
+            print('     Yaw:{:.4f}    Pitch:{:.4f}    Roll:{:.4f}'.format(yaw_predicted.item(), pitch_predicted.item(),
+                                                                          roll_predicted.item()))
+            toc = time.time()
+            global_time.append(toc - tic)
+
+
+
+        for i in range(opts.test_batch_size):
+            result = tensor2im(result_batch[i])
+            # im_path = dataset.paths[global_i]
+            im_path = test_dataset.source_paths[global_i]
+            if opts.couple_outputs or global_i % 100 == 0:
+                # input_im = log_input_image(input_batch[i], opts)
+                input_im = log_input_image(input_cuda[i], opts)
+                resize_amount = (256, 256) if opts.resize_outputs else (opts.output_size, opts.output_size)
+                if opts.resize_factors is not None:
+                    # for super resolution, save the original, down-sampled, and output
+                    source = Image.open(im_path)
+                    res = np.concatenate([np.array(source.resize(resize_amount)),
+                                          np.array(input_im.resize(resize_amount, resample=Image.NEAREST)),
+                                          np.array(result.resize(resize_amount))], axis=1)
+                else:
+                    # otherwise, save the original and output
+                    res = np.concatenate([np.array(input_im.resize(resize_amount)),
+                                          np.array(result.resize(resize_amount))], axis=1)
+                Image.fromarray(res).save(os.path.join(out_path_coupled, os.path.basename(im_path)))
+
+            im_save_path = os.path.join(out_path_results, os.path.basename(im_path))
+            Image.fromarray(np.array(result)).save(im_save_path)
+
+            global_i += 1
+
+    stats_path = os.path.join(opts.exp_dir, 'stats.txt')
+    result_str = 'Runtime {:.4f}+-{:.4f}'.format(np.mean(global_time), np.std(global_time))
+    print(result_str)
+
+    with open(stats_path, 'w') as f:
+        f.write(result_str)
+
+
+
+def run_on_batch(inputs, net, opts):
+    if opts.latent_mask is None:
+        result_batch = net(inputs, randomize_noise=False, resize=opts.resize_outputs)
+    else:
+        latent_mask = [int(l) for l in opts.latent_mask.split(",")]
+        result_batch = []
+        for image_idx, input_image in enumerate(inputs):
+            # get latent vector to inject into our input image
+            vec_to_inject = np.random.randn(1, 512).astype('float32')
+            _, latent_to_inject = net(torch.from_numpy(vec_to_inject).to("cuda"),
+                                      input_code=True,
+                                      return_latents=True)
+            # get output image with injected style vector
+            res = net(input_image.unsqueeze(0).to("cuda").float(),
+                      latent_mask=latent_mask,
+                      inject_latent=latent_to_inject,
+                      alpha=opts.mix_alpha,
+                      resize=opts.resize_outputs)
+            result_batch.append(res)
+        result_batch = torch.cat(result_batch, dim=0)
+    return result_batch
+
+
+if __name__ == '__main__':
+    run()
