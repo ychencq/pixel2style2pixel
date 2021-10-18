@@ -84,7 +84,7 @@ def run(args):
 		gt_path = os.path.join(args.gt_path, f)
 		if f.endswith(".jpg") or f.endswith('.png'):
 			file_paths.append([image_path, gt_path.replace('.png','.jpg')])
-
+	# print(int(math.ceil(len(file_paths) / args.num_threads)))
 	file_chunks = list(chunks(file_paths, int(math.ceil(len(file_paths) / args.num_threads))))
 	pool = mp.Pool(args.num_threads)
 	print('Running on {} paths\nHere we goooo'.format(len(file_paths)))

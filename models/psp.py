@@ -11,6 +11,7 @@ from models.encoders import psp_encoders
 from models.stylegan2.model import Generator
 from configs.paths_config import model_paths
 
+path = "/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/"
 
 def get_keys(d, name):
 	if 'state_dict' in d:
@@ -47,7 +48,7 @@ class pSp(nn.Module):
 	def load_weights(self):
 		if self.opts.checkpoint_path is not None:
 			print('Loading pSp from checkpoint: {}'.format(self.opts.checkpoint_path))
-			ckpt = torch.load(self.opts.checkpoint_path, map_location='cpu')
+			ckpt = torch.load(path+self.opts.checkpoint_path, map_location='cpu')
 			self.encoder.load_state_dict(get_keys(ckpt, 'encoder'), strict=True)
 			self.decoder.load_state_dict(get_keys(ckpt, 'decoder'), strict=True)
 			self.__load_latent_avg(ckpt)

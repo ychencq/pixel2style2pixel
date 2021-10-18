@@ -12,8 +12,9 @@ from torch.autograd import Variable
 from torchvision import transforms
 import torch.backends.cudnn as cudnn
 import torchvision
-sys.path.append(".")
-sys.path.append("..")
+
+sys.path.append("/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel")
+
 
 from criteria import id_loss, w_norm,moco_loss
 from configs import data_configs
@@ -26,7 +27,14 @@ from datasets.images_dataset import ImagesDataset
 import models.hopenet as hopenet
 import  utils.util_dhp as util_dhp
 
+path = "/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/"
+
 def run():
+    transformations = transforms.Compose([transforms.Scale(224),
+                                          transforms.CenterCrop(224),
+                                          transforms.ToTensor(),
+                                          transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+
     #---------------- moco calculater
     device = 'cuda:0'
     moco_loss_calculator = moco_loss.MocoLoss().to(device).eval()
@@ -49,7 +57,7 @@ def run():
     os.makedirs(out_path_coupled, exist_ok=True)
 
     # update test options with options used during training
-    ckpt = torch.load(test_opts.checkpoint_path, map_location='cpu')
+    ckpt = torch.load(path+test_opts.checkpoint_path, map_location='cpu')
     opts = ckpt['opts']
     opts.update(vars(test_opts))
     if 'learn_in_w' not in opts:
@@ -57,7 +65,7 @@ def run():
     if 'output_size' not in opts:
         opts['output_size'] = 1024
     opts = Namespace(**opts)
-    # ---- psp mdeol -----------------------------------
+    # ---- psp model -----------------------------------
     net = pSp(opts)
     net.eval()
     net.cuda()
@@ -67,17 +75,25 @@ def run():
     dhp_snapshot_path = '/mnt/nas7/users/chenyifei/code/humanface/deep-head-pose/pretrained_models/hopenet_robust_alpha1.pkl'
     dhp_saved_state_dict = torch.load(dhp_snapshot_path)
     hope_net.load_state_dict(dhp_saved_state_dict)
+    hope_net.cuda()
+    hope_net.eval()
+
+
     # ----- Dataset -------------------------------------
     print('Loading dataset for {}'.format(opts.dataset_type))
     print('data path: {}'.format((opts.data_path)))
     dataset_args = data_configs.DATASETS[opts.dataset_type]
     transforms_dict = dataset_args['transforms'](opts).get_transforms()
-
-    test_dataset = ImagesDataset(source_root=dataset_args['test_source_root'],
-                                 target_root=dataset_args['test_target_root'],
+    test_dataset = ImagesDataset(source_root=opts.data_path,
+                                 target_root=opts.data_path,
                                  source_transform=transforms_dict['transform_source'],
                                  target_transform=transforms_dict['transform_test'],
                                  opts=opts)
+    # test_dataset = ImagesDataset(source_root=dataset_args['test_source_root'],
+    #                              target_root=dataset_args['test_target_root'],
+    #                              source_transform=transforms_dict['transform_source'],
+    #                              target_transform=transforms_dict['transform_test'],
+    #                              opts=opts)
 
     test_dataloader = DataLoader(test_dataset,
                             batch_size=opts.test_batch_size,
@@ -105,30 +121,16 @@ def run():
             loss_moco, moco_sim_improvement, moco_logs = moco_loss_calculator(result_batch, gt_cuda, input_cuda)  # result_batch: inference   y:gt    x:input
             loss_id, id_sim_improvement, id_logs = id_loss_calculator(result_batch, gt_cuda, input_cuda)
             print('Batch {}:'.format(batch_idx))
-            print('    Moco: loss--{:.4f}    sim--{:.4f}    logs--{}'.format(loss_moco.item(),moco_sim_improvement,moco_logs))
-            print('    Identity: loss--{:.4f}    sim-{:.4f}    logs-{}\n'.format(loss_id.item(), id_sim_improvement, id_logs))
-            #- Angle estimator ---------
-            yaw, pitch, roll = hope_net(input_cuda)
-            _, yaw_bpred = torch.max(yaw.data, 1)
-            _, pitch_bpred = torch.max(pitch.data, 1)
-            _, roll_bpred = torch.max(roll.data, 1)
-            yaw_predicted = util_dhp.softmax_temperature(yaw.data, 1)
-            pitch_predicted = util_dhp.softmax_temperature(pitch.data, 1)
-            roll_predicted = util_dhp.softmax_temperature(roll.data, 1)
-            idx_tensor = [idx for idx in range(66)]
-            yaw_predicted = torch.sum(yaw_predicted * idx_tensor, 1).cpu() * 3 - 99
-            pitch_predicted = torch.sum(pitch_predicted * idx_tensor, 1).cpu() * 3 - 99
-            roll_predicted = torch.sum(roll_predicted * idx_tensor, 1).cpu() * 3 - 99
-            print('     Yaw:{:.4f}    Pitch:{:.4f}    Roll:{:.4f}'.format(yaw_predicted.item(), pitch_predicted.item(),
-                                                                          roll_predicted.item()))
+            print('    Moco: loss--{:.4f}    sim--{:.4f}'.format(loss_moco.item(),moco_sim_improvement))
+            print('    Identity: loss--{:.4f}    sim-{:.4f}'.format(loss_id.item(), id_sim_improvement))
+            # print('    Moco: loss--{:.4f}    sim--{:.4f}    logs--{}'.format(loss_moco.item(),moco_sim_improvement,moco_logs))
+            # print('    Identity: loss--{:.4f}    sim-{:.4f}    logs-{}'.format(loss_id.item(), id_sim_improvement, id_logs))
             toc = time.time()
             global_time.append(toc - tic)
 
-
-
         for i in range(opts.test_batch_size):
+            print(result_batch.shape)
             result = tensor2im(result_batch[i])
-            # im_path = dataset.paths[global_i]
             im_path = test_dataset.source_paths[global_i]
             if opts.couple_outputs or global_i % 100 == 0:
                 # input_im = log_input_image(input_batch[i], opts)
@@ -148,7 +150,32 @@ def run():
 
             im_save_path = os.path.join(out_path_results, os.path.basename(im_path))
             Image.fromarray(np.array(result)).save(im_save_path)
-
+            #---- Angle estimator-------
+            img_dhp  = Image.open(im_save_path)
+            print(img_dhp.size)
+            img_dhp = img_dhp.convert('RGB')
+            print(img_dhp.size)
+            img_dhp = transformations(img_dhp)
+            img_dhp = img_dhp.unsqueeze(0)
+            # img_dhp = Variable(img_dhp)
+            # img_dhp = result_batch.cpu()
+            torch.set_printoptions(profile="full")
+            print(img_dhp)
+            img_dhp = img_dhp.cuda()
+            yaw, pitch, roll = hope_net(img_dhp)
+            _, yaw_bpred = torch.max(yaw.data, 1)
+            _, pitch_bpred = torch.max(pitch.data, 1)
+            _, roll_bpred = torch.max(roll.data, 1)
+            yaw_predicted = util_dhp.softmax_temperature(yaw.data, 1)
+            pitch_predicted = util_dhp.softmax_temperature(pitch.data, 1)
+            roll_predicted = util_dhp.softmax_temperature(roll.data, 1)
+            idx_tensor = [idx for idx in range(66)]
+            idx_tensor = torch.FloatTensor(idx_tensor).cuda()
+            yaw_predicted = torch.sum(yaw_predicted * idx_tensor, 1).cpu() * 3 - 99
+            pitch_predicted = torch.sum(pitch_predicted * idx_tensor, 1).cpu() * 3 - 99
+            roll_predicted = torch.sum(roll_predicted * idx_tensor, 1).cpu() * 3 - 99
+            print('    Yaw:{:.4f}    Pitch:{:.4f}    Roll:{:.4f}\n'.format(yaw_predicted.item(),pitch_predicted.item(),roll_predicted.item()))
+            # ------------------------------------------------------------
             global_i += 1
 
     stats_path = os.path.join(opts.exp_dir, 'stats.txt')

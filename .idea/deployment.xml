@@ -16,10 +16,24 @@
           </mappings>
         </serverdata>
       </paths>
+      <paths name="chenyifei@10.67.42.25:22 (1)">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
       <paths name="chenyifei@10.67.42.25:22 (2)">
         <serverdata>
           <mappings>
             <mapping deploy="/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="chenyifei@10.67.42.43:22">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
           </mappings>
         </serverdata>
       </paths>

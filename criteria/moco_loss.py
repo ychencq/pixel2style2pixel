@@ -2,7 +2,7 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 from configs.paths_config import model_paths
-
+path = "/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/"
 
 class MocoLoss(nn.Module):
 
@@ -21,7 +21,7 @@ class MocoLoss(nn.Module):
         for name, param in model.named_parameters():
             if name not in ['fc.weight', 'fc.bias']:
                 param.requires_grad = False
-        checkpoint = torch.load(model_paths['moco'], map_location="cpu")
+        checkpoint = torch.load(path+model_paths['moco'], map_location="cpu")
         state_dict = checkpoint['state_dict']
         # rename moco pre-trained keys
         for k in list(state_dict.keys()):
@@ -49,6 +49,10 @@ class MocoLoss(nn.Module):
         x_feats = self.extract_feats(x)
         y_feats = self.extract_feats(y)
         y_hat_feats = self.extract_feats(y_hat)
+        if x_feats.dim() == 1:
+            x_feats = x_feats.unsqueeze(0)
+            y_feats = y_feats.unsqueeze(0)
+            y_hat_feats = y_hat_feats.unsqueeze(0)
         y_feats = y_feats.detach()
         loss = 0
         sim_improvement = 0

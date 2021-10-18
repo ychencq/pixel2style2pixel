@@ -9,7 +9,7 @@ class TestOptions:
 
 	def initialize(self):
 		# arguments for inference script
-		self.parser.add_argument('--exp_dir', type=str, help='Path to experiment output directory')
+		self.parser.add_argument('--exp_dir', type=str, default='/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/test_merge/',help='Path to experiment output directory')
 		self.parser.add_argument('--checkpoint_path', default=None, type=str, help='Path to pSp model checkpoint')
 		self.parser.add_argument('--data_path', type=str, default='gt_images', help='Path to directory of images to evaluate')
 		self.parser.add_argument('--couple_outputs', action='store_true', help='Whether to also save inputs + outputs side-by-side')
