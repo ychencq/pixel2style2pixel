@@ -1,11 +1,11 @@
 dataset_paths = {
 	'celeba_train': '',
-	'celeba_test': '/mnt/nas7/users/chenyifei/data/FEI_Face/originalimages_part1/',
+	'celeba_test': '',
 	'celeba_train_sketch': '',
 	'celeba_test_sketch': '',
 	'celeba_train_segmentation': '',
 	'celeba_test_segmentation': '',
-	'ffhq': '/mnt/nas7/users/chenyifei/data/FEI_Face/originalimages_part1/',
+	'ffhq': '',
 }
 
 model_paths = {

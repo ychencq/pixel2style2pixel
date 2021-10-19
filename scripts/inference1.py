@@ -30,6 +30,14 @@ import  utils.util_dhp as util_dhp
 path = "/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/"
 
 def run():
+
+    # --- metric counting ------------------------------------
+    sim_threshold = 0.2
+    angle_threshold = 15
+    total_sim_fit = 0
+    total_angle_fit = 0
+    total_full_fit = 0
+    # -------------------------------------------------------
     transformations = transforms.Compose([transforms.Scale(224),
                                           transforms.CenterCrop(224),
                                           transforms.ToTensor(),
@@ -89,11 +97,6 @@ def run():
                                  source_transform=transforms_dict['transform_source'],
                                  target_transform=transforms_dict['transform_test'],
                                  opts=opts)
-    # test_dataset = ImagesDataset(source_root=dataset_args['test_source_root'],
-    #                              target_root=dataset_args['test_target_root'],
-    #                              source_transform=transforms_dict['transform_source'],
-    #                              target_transform=transforms_dict['transform_test'],
-    #                              opts=opts)
 
     test_dataloader = DataLoader(test_dataset,
                             batch_size=opts.test_batch_size,
@@ -108,6 +111,9 @@ def run():
     global_i = 0
     global_time = []
     for batch_idx,input_batch in enumerate(test_dataloader):
+        sim_fit = 0
+        angle_fit = 0
+        full_fit = 0
         if global_i >= opts.n_images:
             break
         with torch.no_grad():
@@ -123,13 +129,12 @@ def run():
             print('Batch {}:'.format(batch_idx))
             print('    Moco: loss--{:.4f}    sim--{:.4f}'.format(loss_moco.item(),moco_sim_improvement))
             print('    Identity: loss--{:.4f}    sim-{:.4f}'.format(loss_id.item(), id_sim_improvement))
-            # print('    Moco: loss--{:.4f}    sim--{:.4f}    logs--{}'.format(loss_moco.item(),moco_sim_improvement,moco_logs))
-            # print('    Identity: loss--{:.4f}    sim-{:.4f}    logs-{}'.format(loss_id.item(), id_sim_improvement, id_logs))
+            if loss_moco.item()<sim_threshold:
+                sim_fit += 1
             toc = time.time()
             global_time.append(toc - tic)
 
         for i in range(opts.test_batch_size):
-            print(result_batch.shape)
             result = tensor2im(result_batch[i])
             im_path = test_dataset.source_paths[global_i]
             if opts.couple_outputs or global_i % 100 == 0:
@@ -151,16 +156,11 @@ def run():
             im_save_path = os.path.join(out_path_results, os.path.basename(im_path))
             Image.fromarray(np.array(result)).save(im_save_path)
             #---- Angle estimator-------
-            img_dhp  = Image.open(im_save_path)
-            print(img_dhp.size)
+            img_dhp = Image.open(im_save_path)
             img_dhp = img_dhp.convert('RGB')
-            print(img_dhp.size)
             img_dhp = transformations(img_dhp)
             img_dhp = img_dhp.unsqueeze(0)
-            # img_dhp = Variable(img_dhp)
-            # img_dhp = result_batch.cpu()
             torch.set_printoptions(profile="full")
-            print(img_dhp)
             img_dhp = img_dhp.cuda()
             yaw, pitch, roll = hope_net(img_dhp)
             _, yaw_bpred = torch.max(yaw.data, 1)
@@ -174,10 +174,22 @@ def run():
             yaw_predicted = torch.sum(yaw_predicted * idx_tensor, 1).cpu() * 3 - 99
             pitch_predicted = torch.sum(pitch_predicted * idx_tensor, 1).cpu() * 3 - 99
             roll_predicted = torch.sum(roll_predicted * idx_tensor, 1).cpu() * 3 - 99
+            if abs(yaw_predicted.item())<angle_threshold and abs(pitch_predicted.item())<angle_threshold and abs(roll_predicted.item())<angle_threshold:
+                angle_fit += 1
+            if sim_fit != 0 and angle_fit != 0:
+                full_fit += 1
+
+            total_sim_fit += sim_fit
+            total_angle_fit += angle_fit
+            total_full_fit += full_fit
             print('    Yaw:{:.4f}    Pitch:{:.4f}    Roll:{:.4f}\n'.format(yaw_predicted.item(),pitch_predicted.item(),roll_predicted.item()))
             # ------------------------------------------------------------
             global_i += 1
 
+    #----- calculate percentile
+    print('ID/SIM: {:.2f}%    Angle: {:.2f}%    Both: {:.2f}%'.format(total_sim_fit*100/global_i,
+                                                                      total_angle_fit*100/global_i,
+                                                                      total_full_fit*100/global_i))
     stats_path = os.path.join(opts.exp_dir, 'stats.txt')
     result_str = 'Runtime {:.4f}+-{:.4f}'.format(np.mean(global_time), np.std(global_time))
     print(result_str)
