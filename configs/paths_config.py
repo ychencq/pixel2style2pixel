@@ -5,12 +5,12 @@ dataset_paths = {
 	'celeba_test_sketch': '',
 	'celeba_train_segmentation': '',
 	'celeba_test_segmentation': '',
-	'ffhq': '',
+	'ffhq': '/mnt/nas7/users/chenyifei/data/ffhq_256',
 }
 
 model_paths = {
 	'stylegan_ffhq': 'pretrained_models/stylegan2-ffhq-config-f.pt',
-	'ffhq_frontalize': 'pretrained_models/psp_ffhq_frontalization.pt',
+	'ffhq_frontalize': 'experiment/frontal_train_ffhq_batch8/checkpoints/iteration_30000.pt',
 	'ir_se50': 'pretrained_models/model_ir_se50.pth',
 	'circular_face': 'pretrained_models/CurricularFace_Backbone.pth',
 	'mtcnn_pnet': 'pretrained_models/mtcnn/pnet.npy',

@@ -14,7 +14,7 @@ import torch.backends.cudnn as cudnn
 import torchvision
 
 sys.path.append("/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel")
-
+import torch.nn.functional as F
 
 from criteria import id_loss, w_norm,moco_loss
 from configs import data_configs
@@ -43,6 +43,9 @@ def run():
                                           transforms.ToTensor(),
                                           transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 
+    id_transform = transforms.Compose([transforms.ToTensor(),
+                                       transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
+                                       ])
     #---------------- moco calculater
     device = 'cuda:0'
     moco_loss_calculator = moco_loss.MocoLoss().to(device).eval()
@@ -71,7 +74,7 @@ def run():
     if 'learn_in_w' not in opts:
         opts['learn_in_w'] = False
     if 'output_size' not in opts:
-        opts['output_size'] = 1024
+        opts['output_size'] = 256
     opts = Namespace(**opts)
     # ---- psp model -----------------------------------
     net = pSp(opts)
@@ -92,43 +95,63 @@ def run():
     print('data path: {}'.format((opts.data_path)))
     dataset_args = data_configs.DATASETS[opts.dataset_type]
     transforms_dict = dataset_args['transforms'](opts).get_transforms()
-    test_dataset = ImagesDataset(source_root=opts.data_path,
-                                 target_root=opts.data_path,
-                                 source_transform=transforms_dict['transform_source'],
-                                 target_transform=transforms_dict['transform_test'],
-                                 opts=opts)
 
-    test_dataloader = DataLoader(test_dataset,
+    dataset = InferenceDataset(root=opts.data_path,
+                               transform=transforms_dict['transform_inference'],
+                               opts=opts)
+
+    dataloader = DataLoader(dataset,
                             batch_size=opts.test_batch_size,
                             shuffle=False,
                             num_workers=int(opts.test_workers),
                             drop_last=True)
+    # test_dataset = ImagesDataset(source_root=opts.data_path,
+    #                              target_root=opts.data_path,
+    #                              source_transform=transforms_dict['transform_source'],
+    #                              target_transform=transforms_dict['transform_test'],
+    #                              opts=opts)
+    #
+    # test_dataloader = DataLoader(test_dataset,
+    #                         batch_size=opts.test_batch_size,
+    #                         shuffle=False,
+    #                         num_workers=int(opts.test_workers),
+    #                         drop_last=True)
 
     if opts.n_images is None:
-        opts.n_images = len(test_dataset)
+        opts.n_images = len(dataset)
 
     # ---- inference ---------------------------------------
     global_i = 0
     global_time = []
-    for batch_idx,input_batch in enumerate(test_dataloader):
+    for batch_idx,input_batch in enumerate(dataloader):
         sim_fit = 0
         angle_fit = 0
         full_fit = 0
         if global_i >= opts.n_images:
             break
         with torch.no_grad():
-            input_cuda, gt_cuda = input_batch
+            input_cuda = input_batch
+            gt_cuda = input_batch
             input_cuda = input_cuda.cuda().float()
             gt_cuda = gt_cuda.cuda().float()
+            # input_cuda = input_cuda.unsqueeze(0)
+            # gt_cuda = gt_cuda.unsqueeze(0)
             tic = time.time()
             # - inference --------------
             result_batch = run_on_batch(input_cuda, net, opts)
             #- Identity Loss -----------
-            loss_moco, moco_sim_improvement, moco_logs = moco_loss_calculator(result_batch, gt_cuda, input_cuda)  # result_batch: inference   y:gt    x:input
-            loss_id, id_sim_improvement, id_logs = id_loss_calculator(result_batch, gt_cuda, input_cuda)
+
+
+            # ----try resize to 256
+            result_batch_resize = F.interpolate(result_batch, size=256)
+            # ---------------------------
+
+
+            loss_moco, moco_sim_improvement, moco_logs = moco_loss_calculator(result_batch_resize, gt_cuda, input_cuda)  # result_batch: inference   y:gt    x:input
+            loss_id, id_sim_improvement, id_logs = id_loss_calculator(result_batch_resize, gt_cuda, input_cuda)
             print('Batch {}:'.format(batch_idx))
-            print('    Moco: loss--{:.4f}    sim--{:.4f}'.format(loss_moco.item(),moco_sim_improvement))
-            print('    Identity: loss--{:.4f}    sim-{:.4f}'.format(loss_id.item(), id_sim_improvement))
+            print('    Moco: loss {:.4f}    sim_imporve {:.4f}'.format(loss_moco.item(),moco_sim_improvement))
+            print('    Identity: loss {:.4f}    sim_imporve {:.4f}'.format(loss_id.item(), id_sim_improvement))
             if loss_moco.item()<sim_threshold:
                 sim_fit += 1
             toc = time.time()
@@ -136,7 +159,8 @@ def run():
 
         for i in range(opts.test_batch_size):
             result = tensor2im(result_batch[i])
-            im_path = test_dataset.source_paths[global_i]
+            # im_path = test_dataset.source_paths[global_i]
+            im_path = dataset.paths[global_i]
             if opts.couple_outputs or global_i % 100 == 0:
                 # input_im = log_input_image(input_batch[i], opts)
                 input_im = log_input_image(input_cuda[i], opts)
@@ -160,7 +184,6 @@ def run():
             img_dhp = img_dhp.convert('RGB')
             img_dhp = transformations(img_dhp)
             img_dhp = img_dhp.unsqueeze(0)
-            torch.set_printoptions(profile="full")
             img_dhp = img_dhp.cuda()
             yaw, pitch, roll = hope_net(img_dhp)
             _, yaw_bpred = torch.max(yaw.data, 1)

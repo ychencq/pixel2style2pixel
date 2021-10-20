@@ -14,7 +14,7 @@ class TrainOptions:
 		self.parser.add_argument('--encoder_type', default='GradualStyleEncoder', type=str, help='Which encoder to use')
 		self.parser.add_argument('--input_nc', default=3, type=int, help='Number of input image channels to the psp encoder')
 		self.parser.add_argument('--label_nc', default=0, type=int, help='Number of input label channels to the psp encoder')
-		self.parser.add_argument('--output_size', default=1024, type=int, help='Output size of generator')
+		self.parser.add_argument('--output_size', default=256, type=int, help='Output size of generator')
 
 		self.parser.add_argument('--batch_size', default=4, type=int, help='Batch size for training')
 		self.parser.add_argument('--test_batch_size', default=2, type=int, help='Batch size for testing and inference')

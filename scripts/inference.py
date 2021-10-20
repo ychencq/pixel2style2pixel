@@ -62,41 +62,42 @@ def run():
     dataset_args = data_configs.DATASETS[opts.dataset_type]
     transforms_dict = dataset_args['transforms'](opts).get_transforms()
 
-    test_dataset = ImagesDataset(source_root=dataset_args['test_source_root'],
-                                 target_root=dataset_args['test_target_root'],
-                                 source_transform=transforms_dict['transform_source'],
-                                 target_transform=transforms_dict['transform_test'],
-                                 opts=opts)
-
-    test_dataloader = DataLoader(test_dataset,
-                            batch_size=opts.test_batch_size,
-                            shuffle=False,
-                            num_workers=int(opts.test_workers),
-                            drop_last=True)
-
-    # dataset = InferenceDataset(root=opts.data_path,
-    #                            transform=transforms_dict['transform_inference'],
-    #                            opts=opts)
-
-    # dataloader = DataLoader(dataset,
+    # test_dataset = ImagesDataset(source_root=dataset_args['test_source_root'],
+    #                              target_root=dataset_args['test_target_root'],
+    #                              source_transform=transforms_dict['transform_source'],
+    #                              target_transform=transforms_dict['transform_test'],
+    #                              opts=opts)
+    #
+    # test_dataloader = DataLoader(test_dataset,
     #                         batch_size=opts.test_batch_size,
     #                         shuffle=False,
     #                         num_workers=int(opts.test_workers),
     #                         drop_last=True)
 
+    dataset = InferenceDataset(root=opts.data_path,
+                               transform=transforms_dict['transform_inference'],
+                               opts=opts)
+
+    dataloader = DataLoader(dataset,
+                            batch_size=opts.test_batch_size,
+                            shuffle=False,
+                            num_workers=int(opts.test_workers),
+                            drop_last=True)
+
     if opts.n_images is None:
-        opts.n_images = len(test_dataset)
-        # opts.n_images = len(dataset)
+        # opts.n_images = len(test_dataset)
+        opts.n_images = len(dataset)
 
     global_i = 0
     global_time = []
-    # for input_batch in tqdm(dataloader):
+    for batch_idx,input_batch in enumerate(dataloader):
     # for input_batch in tqdm(test_dataloader):
-    for batch_idx,input_batch in enumerate(test_dataloader):
+    # for batch_idx,input_batch in enumerate(test_dataloader):
         if global_i >= opts.n_images:
             break
         with torch.no_grad():
-            input_cuda, gt_cuda = input_batch
+            input_cuda = input_batch
+            gt_cuda = input_batch
             input_cuda = input_cuda.cuda().float()
             gt_cuda = gt_cuda.cuda().float()
             tic = time.time()
@@ -117,8 +118,8 @@ def run():
 
         for i in range(opts.test_batch_size):
             result = tensor2im(result_batch[i])
-            # im_path = dataset.paths[global_i]
-            im_path = test_dataset.source_paths[global_i]
+            im_path = dataset.paths[global_i]
+            # im_path = test_dataset.source_paths[global_i]
             if opts.couple_outputs or global_i % 100 == 0:
                 # input_im = log_input_image(input_batch[i], opts)
                 input_im = log_input_image(input_cuda[i], opts)
