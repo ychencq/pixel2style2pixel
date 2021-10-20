@@ -70,7 +70,7 @@ class EvalDataset(Dataset):
 # --- Run Function ------------------------------------------------------
 def run(inference_root,gt_root,save_root):
 	# metric counting
-	sim_threshold = 0.2
+	sim_threshold = 0.3
 	angle_threshold = 15
 	total_sim_fit = 0
 	total_angle_fit = 0
@@ -183,6 +183,7 @@ def run(inference_root,gt_root,save_root):
 		total_angle_fit += angle_fit
 		total_full_fit += full_fit
 		global_i += 1
+	print('Total samples evaluated:{}'.format(global_i))
 	print('ID/SIM: {:.2f}%    Angle: {:.2f}%    Both: {:.2f}%'.format(total_sim_fit * 100 / global_i,
 																	  total_angle_fit * 100 / global_i,
 																	  total_full_fit * 100 / global_i))
@@ -192,6 +193,13 @@ if __name__ == '__main__':
 	gt_root = '/mnt/nas7/users/chenyifei/data/FEI_testmini/images/'
 	inference_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/fei_testmini/inference_results/'
 	save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/fei_testmini/check_match/'
+	# gt_root = '/mnt/nas6/users/xiesong/data/3D/FEI_Face/test_data/'
+	# gt_root = '/mnt/nas6/users/xiesong/data/3D/FEI_Face/test_gt/'
+	# inference_root = '/mnt/nas6/users/xiesong/code/3D/Rotate-and-Render-master/FEI_results/rs_model/example/orig_rename'
+	# save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/fei_xiesong/check_match/'
+	# gt_root = '/mnt/nas6/users/xiesong/data/3D/mmgen/real_imgs/'
+	# inference_root = '/mnt/nas6/users/xiesong/data/3D/mmgen/fake_imgs/'
+	# save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/shiyong/check_match/'
 	run(inference_root,gt_root,save_root)
 
 

@@ -161,7 +161,7 @@ def run():
             result = tensor2im(result_batch[i])
             # im_path = test_dataset.source_paths[global_i]
             im_path = dataset.paths[global_i]
-            if opts.couple_outputs or global_i % 100 == 0:
+            if opts.couple_outputs or global_i % 5 == 0:
                 # input_im = log_input_image(input_batch[i], opts)
                 input_im = log_input_image(input_cuda[i], opts)
                 resize_amount = (256, 256) if opts.resize_outputs else (opts.output_size, opts.output_size)
