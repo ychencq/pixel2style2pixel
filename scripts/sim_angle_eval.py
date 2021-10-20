@@ -1,3 +1,10 @@
+"""
+    File name: sim_angle_eval.py
+    Author: Yifei Chen
+    email: chenyifei14@huawei.com
+    Date created: 10/20/2021
+    Date last modified: 10/20/2021
+"""
 from torch.utils.data import Dataset
 from PIL import Image
 import os
