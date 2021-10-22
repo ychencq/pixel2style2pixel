@@ -37,6 +37,7 @@ def run():
     total_sim_fit = 0
     total_angle_fit = 0
     total_full_fit = 0
+    avg_id_loss = 0
     # -------------------------------------------------------
     transformations = transforms.Compose([transforms.Scale(224),
                                           transforms.CenterCrop(224),
@@ -154,6 +155,7 @@ def run():
             print('    Identity: loss {:.4f}    sim_imporve {:.4f}'.format(loss_id.item(), id_sim_improvement))
             if loss_moco.item()<sim_threshold:
                 sim_fit += 1
+            avg_id_loss += loss_id.item()
             toc = time.time()
             global_time.append(toc - tic)
 
@@ -208,11 +210,12 @@ def run():
             print('    Yaw:{:.4f}    Pitch:{:.4f}    Roll:{:.4f}\n'.format(yaw_predicted.item(),pitch_predicted.item(),roll_predicted.item()))
             # ------------------------------------------------------------
             global_i += 1
-
+    avg_id_loss /= global_i
     #----- calculate percentile
     print('ID/SIM: {:.2f}%    Angle: {:.2f}%    Both: {:.2f}%'.format(total_sim_fit*100/global_i,
                                                                       total_angle_fit*100/global_i,
                                                                       total_full_fit*100/global_i))
+    print('Avg id_loss: {:.2f}'.format(avg_id_loss))
     stats_path = os.path.join(opts.exp_dir, 'stats.txt')
     result_str = 'Runtime {:.4f}+-{:.4f}'.format(np.mean(global_time), np.std(global_time))
     print(result_str)

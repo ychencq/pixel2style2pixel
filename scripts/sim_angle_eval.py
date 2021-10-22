@@ -62,6 +62,8 @@ class EvalDataset(Dataset):
 		infer_name = infer_path.split('/')[-1]
 		gt_name = gt_path.split('/')[-1]
 		if infer_name != gt_name:
+			print(infer_name)
+			print(gt_name)
 			raise ValueError('Ooops! inference & ground truth dont match.')
 
 		return infer_img, gt_img, infer_name
@@ -70,7 +72,8 @@ class EvalDataset(Dataset):
 # --- Run Function ------------------------------------------------------
 def run(inference_root,gt_root,save_root):
 	# metric counting
-	sim_threshold = 0.3
+	avg_id_loss = 0
+	sim_threshold = 0.2
 	angle_threshold = 15
 	total_sim_fit = 0
 	total_angle_fit = 0
@@ -140,6 +143,7 @@ def run(inference_root,gt_root,save_root):
 			# metric counting
 			if loss_moco.item() < sim_threshold:
 				sim_fit += 1
+			avg_id_loss += loss_id.item()
 
 		# img save for checking matching
 		infer_im = tensor2im(infer_cuda[0])
@@ -183,16 +187,21 @@ def run(inference_root,gt_root,save_root):
 		total_angle_fit += angle_fit
 		total_full_fit += full_fit
 		global_i += 1
+	avg_id_loss /= global_i
 	print('Total samples evaluated:{}'.format(global_i))
 	print('ID/SIM: {:.2f}%    Angle: {:.2f}%    Both: {:.2f}%'.format(total_sim_fit * 100 / global_i,
 																	  total_angle_fit * 100 / global_i,
 																	  total_full_fit * 100 / global_i))
+	print('Avg id_loss: {:.2f}'.format(avg_id_loss))
 
 
 if __name__ == '__main__':
-	gt_root = '/mnt/nas7/users/chenyifei/data/FEI_testmini/images/'
-	inference_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/fei_testmini/inference_results/'
-	save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/fei_testmini/check_match/'
+	gt_root = '/mnt/nas7/users/chenyifei/data/FEI_Face/originalimages_all/'
+	inference_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/fei_all/inference_results/'
+	save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/fei_all/check_match/'
+	# gt_root = '/mnt/nas7/users/chenyifei/data/FEI_testmini/images/'
+	# inference_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/fei_testmini/inference_results/'
+	# save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/fei_testmini/check_match/'
 	# gt_root = '/mnt/nas6/users/xiesong/data/3D/FEI_Face/test_data/'
 	# gt_root = '/mnt/nas6/users/xiesong/data/3D/FEI_Face/test_gt/'
 	# inference_root = '/mnt/nas6/users/xiesong/code/3D/Rotate-and-Render-master/FEI_results/rs_model/example/orig_rename'
