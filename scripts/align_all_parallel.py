@@ -24,10 +24,14 @@ import scipy.ndimage
 import dlib
 import multiprocessing as mp
 import math
+import sys
 
+sys.path.append(".")
+sys.path.append("..")
 from configs.paths_config import model_paths
 SHAPE_PREDICTOR_PATH = model_paths["shape_predictor"]
 
+from utils import data_utils
 
 def get_landmark(filepath, predictor):
 	"""get landmark with dlib
@@ -166,7 +170,7 @@ def extract_on_paths(file_paths):
 
 def parse_args():
 	parser = ArgumentParser(add_help=False)
-	parser.add_argument('--num_threads', type=int, default=1)
+	parser.add_argument('--num_threads', type=int, default=4)
 	parser.add_argument('--root_path', type=str, default='')
 	args = parser.parse_args()
 	return args
@@ -174,10 +178,9 @@ def parse_args():
 
 def run(args):
 	root_path = args.root_path
-	out_crops_path = root_path + '_crops'
+	out_crops_path = root_path + '_aligned'
 	if not os.path.exists(out_crops_path):
 		os.makedirs(out_crops_path, exist_ok=True)
-
 	file_paths = []
 	for root, dirs, files in os.walk(root_path):
 		for file in files:
@@ -199,5 +202,10 @@ def run(args):
 
 
 if __name__ == '__main__':
+	if not os.path.exists("shape_predictor_68_face_landmarks.dat"):
+		print('Downloading files for aligning face image...')
+		os.system('wget http://dlib.net/files/shape_predictor_68_face_landmarks.dat.bz2')
+		os.system('bzip2 -dk shape_predictor_68_face_landmarks.dat.bz2')
+		print('Done.')
 	args = parse_args()
 	run(args)

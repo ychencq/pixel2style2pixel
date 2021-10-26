@@ -2,8 +2,8 @@
     File name: sim_angle_eval.py
     Author: Yifei Chen
     email: chenyifei14@huawei.com
-    Date created: 10/20/2021
-    Date last modified: 10/25/2021
+    Date created: 10/26/2021
+    Date last modified: 10/26/2021
 """
 from torch.utils.data import Dataset
 from PIL import Image
@@ -35,6 +35,12 @@ from datasets.images_dataset import ImagesDataset
 
 import models.hopenet as hopenet
 import  utils.util_dhp as util_dhp
+
+from models.mtcnn.mtcnn import MTCNN
+from models.encoders.model_irse import IR_101
+from configs.paths_config import model_paths
+CIRCULAR_FACE_PATH = model_paths['circular_face']
+
 
 # --- Dataloader ------------------------------------------------------
 class EvalDataset(Dataset):
@@ -74,6 +80,7 @@ def run(inference_root,gt_root,save_root):
 	# metric counting
 	avg_moco_loss = 0
 	avg_id_loss = 0
+	avg_id_score = 0
 	sim_threshold = 0.4
 	angle_threshold = 15
 	total_moco_fit = 0
@@ -81,6 +88,7 @@ def run(inference_root,gt_root,save_root):
 	total_id_fit = 0
 	tota_MA_fit = 0
 	tota_IA_fit = 0
+
 	id_transform = transforms.Compose([transforms.Resize((256, 256)),
 									   transforms.ToTensor(),
 									   transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])])
@@ -93,6 +101,20 @@ def run(inference_root,gt_root,save_root):
 	moco_loss_calculator = moco_loss.MocoLoss().to(device).eval()
 	print('loading identity loss model')
 	id_loss_calculator = id_loss.IDLoss().to(device).eval()
+
+	# Id loss model
+	facenet = IR_101(input_size=112)
+	facenet.load_state_dict(torch.load(CIRCULAR_FACE_PATH))
+	facenet.cuda()
+	facenet.eval()
+	mtcnn = MTCNN()
+	facenet_id_transform = transforms.Compose([
+		transforms.ToTensor(),
+		transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
+	])
+	# print('\t{} is starting to extract on {} images'.format(pid, len(file_paths)))
+	# tot_count = len(file_paths)
+	# count = 0
 
 	# DHP: Angle estimator model
 	print('loading deep head pose model')
@@ -162,6 +184,21 @@ def run(inference_root,gt_root,save_root):
 								  np.array(gt_im.resize(resize_amount))], axis=1)
 			Image.fromarray(res).save(os.path.join(out_path_coupled, name))
 
+
+		# id score
+		res_path = dataset.inference_paths[global_i]
+		input_im = Image.open(res_path)
+		input_im, _ = mtcnn.align(input_im)
+		input_id = facenet(facenet_id_transform(input_im).unsqueeze(0).cuda())[0]
+
+		gt_path =dataset.gt_paths[global_i]
+		result_im = Image.open(gt_path)
+		result_im, _ = mtcnn.align(result_im)
+		result_id = facenet(facenet_id_transform(result_im).unsqueeze(0).cuda())[0]
+		id_score = float(input_id.dot(result_id))
+		avg_id_score += id_score
+		print('    id score: {:.4f}'.format(id_score))
+
 		# Angle estimator
 		im_path = dataset.inference_paths[global_i]
 		img_dhp = Image.open(im_path)
@@ -203,6 +240,7 @@ def run(inference_root,gt_root,save_root):
 
 	avg_id_loss /= global_i
 	avg_moco_loss /= global_i
+	avg_id_score /= global_i
 	print('Total samples evaluated:{}'.format(global_i))
 	print('Threshold: SIM_Loss {}   Angle {}'.format(sim_threshold,angle_threshold))
 	print('MOCO_SIM: {:.2f}%    Angle: {:.2f}%    Both: {:.2f}%'.format(total_moco_fit * 100 / global_i,
@@ -217,15 +255,15 @@ def run(inference_root,gt_root,save_root):
 
 
 if __name__ == '__main__':
-	# os.environ["CUDA_VISIBLE_DEVICES"] = "6"
+	os.environ["CUDA_VISIBLE_DEVICES"] = "4"
 	# check 指标计算正确性
-	gt_root = '/mnt/nas6/users/xiesong/data/3D/FEI_Face/test_gt/'
-	inference_root = '/mnt/nas6/users/xiesong/data/3D/FEI_Face/test_data/'
-	save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/fei_all_ValidateAlgo/check_match/'
+	# gt_root = '/mnt/nas6/users/xiesong/data/3D/FEI_Face/test_gt/'
+	# inference_root = '/mnt/nas6/users/xiesong/data/3D/FEI_Face/test_data/'
+	# save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/fei_all_ValidateAlgo/check_match/'
 	# xiesong RaR
-	# gt_root = '/mnt/nas6/users/xiesong/data/3D/FEI_Face/test_data/'
-	# inference_root = '/mnt/nas6/users/xiesong/code/3D/Rotate-and-Render-master/FEI_results/rs_model/example/orig_rename/'
-	# save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/fei_all_RaR/check_match/'
+	gt_root = '/mnt/nas6/users/xiesong/data/3D/FEI_Face/test_data/'
+	inference_root = '/mnt/nas6/users/xiesong/code/3D/Rotate-and-Render-master/FEI_results/rs_model/example/orig_rename/'
+	save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/fei_all_RaR/check_match/'
 	# yifei PsP
 	# gt_root = '/mnt/nas6/users/xiesong/data/3D/FEI_Face/test_data/'
 	# inference_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/fei_all/inference_results/'
