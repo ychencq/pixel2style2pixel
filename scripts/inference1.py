@@ -1,3 +1,13 @@
+'''
+running example
+python scripts/inference1.py \
+--exp_dir=/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/psp_test_fei_180000/ \
+--checkpoint_path=experiment/frontal_train_ffhq_batch8/checkpoints/iteration_180000.pt \
+--data_path=/mnt/nas6/users/xiesong/data/3D/FEI_Face/test_data \
+--test_batch_size=1 \
+--test_workers=4
+'''
+
 import os
 from argparse import Namespace
 
@@ -147,14 +157,13 @@ def run():
             result_batch_resize = F.interpolate(result_batch, size=256)
             # ---------------------------
 
-
             loss_moco, moco_sim_improvement, moco_logs = moco_loss_calculator(result_batch_resize, gt_cuda, input_cuda)  # result_batch: inference   y:gt    x:input
             loss_id, id_sim_improvement, id_logs = id_loss_calculator(result_batch_resize, gt_cuda, input_cuda)
             print('Batch {}:'.format(batch_idx))
             print('    Moco: loss {:.4f}    sim_imporve {:.4f}'.format(loss_moco.item(),moco_sim_improvement))
             print('    Identity: loss {:.4f}    sim_imporve {:.4f}'.format(loss_id.item(), id_sim_improvement))
-            if loss_moco.item()<sim_threshold:
-                sim_fit += 1
+            # if loss_moco.item()<sim_threshold:
+            #     sim_fit += 1
             avg_id_loss += loss_id.item()
             toc = time.time()
             global_time.append(toc - tic)
@@ -181,40 +190,52 @@ def run():
 
             im_save_path = os.path.join(out_path_results, os.path.basename(im_path))
             Image.fromarray(np.array(result)).save(im_save_path)
-            #---- Angle estimator-------
-            img_dhp = Image.open(im_save_path)
-            img_dhp = img_dhp.convert('RGB')
-            img_dhp = transformations(img_dhp)
-            img_dhp = img_dhp.unsqueeze(0)
-            img_dhp = img_dhp.cuda()
-            yaw, pitch, roll = hope_net(img_dhp)
-            _, yaw_bpred = torch.max(yaw.data, 1)
-            _, pitch_bpred = torch.max(pitch.data, 1)
-            _, roll_bpred = torch.max(roll.data, 1)
-            yaw_predicted = util_dhp.softmax_temperature(yaw.data, 1)
-            pitch_predicted = util_dhp.softmax_temperature(pitch.data, 1)
-            roll_predicted = util_dhp.softmax_temperature(roll.data, 1)
-            idx_tensor = [idx for idx in range(66)]
-            idx_tensor = torch.FloatTensor(idx_tensor).cuda()
-            yaw_predicted = torch.sum(yaw_predicted * idx_tensor, 1).cpu() * 3 - 99
-            pitch_predicted = torch.sum(pitch_predicted * idx_tensor, 1).cpu() * 3 - 99
-            roll_predicted = torch.sum(roll_predicted * idx_tensor, 1).cpu() * 3 - 99
-            if abs(yaw_predicted.item())<angle_threshold and abs(pitch_predicted.item())<angle_threshold and abs(roll_predicted.item())<angle_threshold:
-                angle_fit += 1
-            if sim_fit != 0 and angle_fit != 0:
-                full_fit += 1
 
-            total_sim_fit += sim_fit
-            total_angle_fit += angle_fit
-            total_full_fit += full_fit
-            print('    Yaw:{:.4f}    Pitch:{:.4f}    Roll:{:.4f}\n'.format(yaw_predicted.item(),pitch_predicted.item(),roll_predicted.item()))
+
+
+            # temporarily block eval part cause we deprecate it via python file sim_angle_eval.py
+            #---- Angle estimator-------
+            # img_dhp = Image.open(im_save_path)
+            # img_dhp = img_dhp.convert('RGB')
+            # img_dhp = transformations(img_dhp)
+            # img_dhp = img_dhp.unsqueeze(0)
+            # img_dhp = img_dhp.cuda()
+            # yaw, pitch, roll = hope_net(img_dhp)
+            # _, yaw_bpred = torch.max(yaw.data, 1)
+            # _, pitch_bpred = torch.max(pitch.data, 1)
+            # _, roll_bpred = torch.max(roll.data, 1)
+            # yaw_predicted = util_dhp.softmax_temperature(yaw.data, 1)
+            # pitch_predicted = util_dhp.softmax_temperature(pitch.data, 1)
+            # roll_predicted = util_dhp.softmax_temperature(roll.data, 1)
+            # idx_tensor = [idx for idx in range(66)]
+            # idx_tensor = torch.FloatTensor(idx_tensor).cuda()
+            # yaw_predicted = torch.sum(yaw_predicted * idx_tensor, 1).cpu() * 3 - 99
+            # pitch_predicted = torch.sum(pitch_predicted * idx_tensor, 1).cpu() * 3 - 99
+            # roll_predicted = torch.sum(roll_predicted * idx_tensor, 1).cpu() * 3 - 99
+            # if abs(yaw_predicted.item())<angle_threshold and abs(pitch_predicted.item())<angle_threshold and abs(roll_predicted.item())<angle_threshold:
+            #     angle_fit += 1
+            # if sim_fit != 0 and angle_fit != 0:
+            #     full_fit += 1
+            #
+            # total_sim_fit += sim_fit
+            # total_angle_fit += angle_fit
+            # total_full_fit += full_fit
+            # print('    Yaw:{:.4f}    Pitch:{:.4f}    Roll:{:.4f}\n'.format(yaw_predicted.item(),pitch_predicted.item(),roll_predicted.item()))
             # ------------------------------------------------------------
+
+
+
             global_i += 1
     avg_id_loss /= global_i
+
+    # temporarily block eval part cause we deprecate it via python file sim_angle_eval.py
     #----- calculate percentile
-    print('ID/SIM: {:.2f}%    Angle: {:.2f}%    Both: {:.2f}%'.format(total_sim_fit*100/global_i,
-                                                                      total_angle_fit*100/global_i,
-                                                                      total_full_fit*100/global_i))
+    # print('ID/SIM: {:.2f}%    Angle: {:.2f}%    Both: {:.2f}%'.format(total_sim_fit*100/global_i,
+    #                                                                   total_angle_fit*100/global_i,
+    #                                                                   total_full_fit*100/global_i))
+
+
+
     print('Avg id_loss: {:.2f}'.format(avg_id_loss))
     stats_path = os.path.join(opts.exp_dir, 'stats.txt')
     result_str = 'Runtime {:.4f}+-{:.4f}'.format(np.mean(global_time), np.std(global_time))

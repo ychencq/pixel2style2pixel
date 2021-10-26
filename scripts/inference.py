@@ -1,3 +1,11 @@
+
+
+'''
+Old version
+please use inference1.py for our project
+'''
+
+
 import os
 from argparse import Namespace
 

@@ -30,6 +30,20 @@
           </mappings>
         </serverdata>
       </paths>
+      <paths name="chenyifei@10.67.42.25:22 (3)">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="chenyifei@10.67.42.25:22 (4)">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
       <paths name="chenyifei@10.67.42.43:22">
         <serverdata>
           <mappings>
@@ -45,6 +59,13 @@
         </serverdata>
       </paths>
       <paths name="chenyifei@10.67.42.43:22 (2)">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="chenyifei@10.67.42.43:22 (3)">
         <serverdata>
           <mappings>
             <mapping local="$PROJECT_DIR$" web="/" />
