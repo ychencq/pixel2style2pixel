@@ -89,7 +89,11 @@ def run(inference_root,gt_root,save_root):
 	tota_MA_fit = 0
 	tota_IA_fit = 0
 
-	id_transform = transforms.Compose([transforms.Resize((256, 256)),
+	# id_transform = transforms.Compose([transforms.Resize((256, 256)),
+	# 								   transforms.ToTensor(),
+	# 								   transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])])
+	id_transform = transforms.Compose([transforms.Scale(256),
+									   transforms.CenterCrop(256),
 									   transforms.ToTensor(),
 									   transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])])
 	dhp_transform = transforms.Compose([transforms.Scale(224),
@@ -163,16 +167,16 @@ def run(inference_root,gt_root,save_root):
 			# print(infer_cuda.shape)
 			# print(gt_cuda.shape)
 			loss_moco, moco_sim_improvement, moco_logs = moco_loss_calculator(infer_cuda, gt_cuda,gt_cuda)  # result_batch:inference y:gt x:input
-			loss_id, id_sim_improvement, id_logs = id_loss_calculator(infer_cuda, gt_cuda, gt_cuda)
+			# loss_id, id_sim_improvement, id_logs = id_loss_calculator(infer_cuda, gt_cuda, gt_cuda)
 			print('Sample {}:'.format(name))
 			print('    Moco: loss {:.4f}    sim_imporve {:.4f}'.format(loss_moco.item(), moco_sim_improvement))
-			print('    Identity: loss {:.4f}    sim_imporve {:.4f}'.format(loss_id.item(), id_sim_improvement))
+			# print('    Identity: loss {:.4f}    sim_imporve {:.4f}'.format(loss_id.item(), id_sim_improvement))
 			# metric counting
-			if loss_moco.item() < sim_threshold:
-				moco_fit += 1
-			if loss_id.item() < sim_threshold:
-				id_fit += 1
-			avg_id_loss += loss_id.item()
+			# if loss_moco.item() < sim_threshold:
+			# 	moco_fit += 1
+			# if loss_id.item() < sim_threshold:
+			# 	id_fit += 1
+			# avg_id_loss += loss_id.item()
 			avg_moco_loss += loss_moco.item()
 
 		# img save for checking matching
@@ -188,16 +192,18 @@ def run(inference_root,gt_root,save_root):
 		# id score
 		res_path = dataset.inference_paths[global_i]
 		input_im = Image.open(res_path)
-		input_im, _ = mtcnn.align(input_im)
+		input_im, _ = mtcnn.align(input_im) # align to (112,112)
 		input_id = facenet(facenet_id_transform(input_im).unsqueeze(0).cuda())[0]
+		# print(torch.norm(input_id))
 
 		gt_path =dataset.gt_paths[global_i]
 		result_im = Image.open(gt_path)
-		result_im, _ = mtcnn.align(result_im)
+		result_im, _ = mtcnn.align(result_im) # align to (112,112)
 		result_id = facenet(facenet_id_transform(result_im).unsqueeze(0).cuda())[0]
+		# print(torch.norm(result_id))
 		id_score = float(input_id.dot(result_id))
 		avg_id_score += id_score
-		print('    id score: {:.4f}'.format(id_score))
+		print('    ID: score: {:.4f}'.format(id_score))
 
 		# Angle estimator
 		im_path = dataset.inference_paths[global_i]
@@ -222,6 +228,10 @@ def run(inference_root,gt_root,save_root):
 																	   roll_predicted.item()))
 		# ------------------------------------------------------------
 		# metric counting
+		if loss_moco.item() < sim_threshold:
+			moco_fit += 1
+		if id_score > 1-sim_threshold:
+			id_fit += 1
 		if abs(yaw_predicted.item()) < angle_threshold and abs(pitch_predicted.item()) < angle_threshold and abs(
 				roll_predicted.item()) < angle_threshold:
 			angle_fit += 1
@@ -238,7 +248,7 @@ def run(inference_root,gt_root,save_root):
 		tota_IA_fit += IA_fit
 		global_i += 1 #assume batch size = 1
 
-	avg_id_loss /= global_i
+	# avg_id_loss /= global_i
 	avg_moco_loss /= global_i
 	avg_id_score /= global_i
 	print('Total samples evaluated:{}'.format(global_i))
@@ -246,24 +256,29 @@ def run(inference_root,gt_root,save_root):
 	print('MOCO_SIM: {:.2f}%    Angle: {:.2f}%    Both: {:.2f}%'.format(total_moco_fit * 100 / global_i,
 																	  total_angle_fit * 100 / global_i,
 																	  tota_MA_fit * 100 / global_i))
-	print('Avg moco_loss: {:.2f}'.format(avg_moco_loss))
+	print('Avg moco_socre: {:.2f}'.format(1-avg_moco_loss))
 
 	print('ID_SIM: {:.2f}%    Angle: {:.2f}%    Both: {:.2f}%'.format(total_id_fit * 100 / global_i,
 																	  total_angle_fit * 100 / global_i,
 																	  tota_IA_fit * 100 / global_i))
-	print('Avg id_loss: {:.2f}'.format(avg_id_loss))
+	print('Avg avg_id_score: {:.2f}'.format(avg_id_score))
 
 
 if __name__ == '__main__':
 	os.environ["CUDA_VISIBLE_DEVICES"] = "4"
+	# check psp size 不对应的情况下 计算正确性
+	gt_root = '/mnt/nas7/users/chenyifei/data/ffhq_256_mini/'
+	inference_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/ffhq256_testmini/inference_results/'
+	save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/ffhq256_testmini/check_match/'
+
 	# check 指标计算正确性
 	# gt_root = '/mnt/nas6/users/xiesong/data/3D/FEI_Face/test_gt/'
 	# inference_root = '/mnt/nas6/users/xiesong/data/3D/FEI_Face/test_data/'
 	# save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/fei_all_ValidateAlgo/check_match/'
 	# xiesong RaR
-	gt_root = '/mnt/nas6/users/xiesong/data/3D/FEI_Face/test_data/'
-	inference_root = '/mnt/nas6/users/xiesong/code/3D/Rotate-and-Render-master/FEI_results/rs_model/example/orig_rename/'
-	save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/fei_all_RaR/check_match/'
+	# gt_root = '/mnt/nas6/users/xiesong/data/3D/FEI_Face/test_data/'
+	# inference_root = '/mnt/nas6/users/xiesong/code/3D/Rotate-and-Render-master/FEI_results/rs_model/example/orig_rename/'
+	# save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/fei_all_RaR/check_match/'
 	# yifei PsP
 	# gt_root = '/mnt/nas6/users/xiesong/data/3D/FEI_Face/test_data/'
 	# inference_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/fei_all/inference_results/'
