@@ -49,10 +49,10 @@ def run():
     total_full_fit = 0
     avg_id_loss = 0
     # -------------------------------------------------------
-    transformations = transforms.Compose([transforms.Scale(224),
-                                          transforms.CenterCrop(224),
+    transformations = transforms.Compose([transforms.Scale(256),
+                                          transforms.CenterCrop(256),
                                           transforms.ToTensor(),
-                                          transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+                                          transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])])
 
     id_transform = transforms.Compose([transforms.ToTensor(),
                                        transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
@@ -108,7 +108,8 @@ def run():
     transforms_dict = dataset_args['transforms'](opts).get_transforms()
 
     dataset = InferenceDataset(root=opts.data_path,
-                               transform=transforms_dict['transform_inference'],
+                               # transform=transforms_dict['transform_inference'],
+                               transform = transformations,
                                opts=opts)
 
     dataloader = DataLoader(dataset,
