@@ -81,7 +81,7 @@ def run(inference_root,gt_root,save_root):
 	avg_moco_score = 0
 	avg_arc_id_score = 0
 	avg_curr_id_score = 0
-	sim_threshold = 0.8
+	sim_threshold = 0.6
 	angle_threshold = 15
 	total_moco_fit = 0
 	total_angle_fit = 0
@@ -289,11 +289,11 @@ def run(inference_root,gt_root,save_root):
 
 
 if __name__ == '__main__':
-	os.environ["CUDA_VISIBLE_DEVICES"] = "5"
+	os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 	# check psp size 不对应的情况下 计算正确性
-	gt_root = '/mnt/nas7/users/chenyifei/data/ffhq_256_mini/'
-	inference_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/ffhq256_testmini/inference_results/'
-	save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/ffhq256_testmini/check_match/'
+	# gt_root = '/mnt/nas7/users/chenyifei/data/ffhq_256_mini/'
+	# inference_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/ffhq256_testmini/inference_results/'
+	# save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/ffhq256_testmini/check_match/'
 	#
 
 	# check 指标计算正确性
@@ -303,21 +303,37 @@ if __name__ == '__main__':
 
 
 	# xiesong RaR
-	# gt_root = '/mnt/nas6/users/xiesong/data/3D/FEI_Face/test_gt/'
+	# FEI
+	# gt_root = '/mnt/nas6/users/xiesong/data/3D/FEI_Face/test_data/'
 	# inference_root = '/mnt/nas6/users/xiesong/code/3D/Rotate-and-Render-master/FEI_results/rs_model/example/orig_rename/'
 	# save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/fei_all_RaR/check_match/'
+	#FF
+	# gt_root = '/mnt/nas7/users/chenyifei/data/FaceForensics_test_frontal/'
+	# inference_root = '/mnt/nas6/users/xiesong/code/3D/Rotate-and-Render-master/FaceForensics_results/rs_model/example/orig'
+	# save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/FF_all_RaR/check_match/'
 
 
 	# yifei PsP
-	# gt_root = '/mnt/nas6/users/xiesong/data/3D/FEI_Face/test_gt/'
-	# inference_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/fei_all_psp_200000/inference_results/'
-	# save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/fei_all_psp_200000/check_match/'
+	# FEI
+	gt_root = '/mnt/nas6/users/xiesong/data/3D/FEI_Face/test_data/'
+	inference_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/fei_all_psp_50000/inference_results/'
+	save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/fei_all_psp_50000/check_match/'
+	# FF
+	# gt_root = '/mnt/nas7/users/chenyifei/data/FaceForensics_test_frontal/'
+	# inference_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/FF_all_psp_500000/inference_results/'
+	# save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/FF_all_psp_500000/check_match/'
 
 
 	# shiyong 3dmmrt
-	# gt_root = '/mnt/nas6/users/xiesong/data/3D/FEI_Face/test_gt/'
+	# FEI
+	# gt_root = '/mnt/nas6/users/xiesong/data/3D/FEI_Face/test_data/'
 	# inference_root = '/mnt/nas7/users/chenyifei/code/humanface/mmgeneration/frontalization_experiment/fei_test_all/inference_results/'
 	# save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/fei_all_3dmmrt/check_match/'
+	# FF
+	# gt_root = '/mnt/nas7/users/chenyifei/data/FaceForensics_test_frontal/'
+	# inference_root = '/mnt/nas7/users/chenyifei/code/humanface/mmgeneration/frontalization_experiment/ff_test_all/inference_results/'
+	# save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/FF_all_3dmmrt/check_match/'
+
 
 	# yifei x2face -- pose2face ?
 	run(inference_root,gt_root,save_root)

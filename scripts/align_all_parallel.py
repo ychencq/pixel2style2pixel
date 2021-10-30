@@ -154,6 +154,7 @@ def extract_on_paths(file_paths):
 	print('\t{} is starting to extract on #{} images'.format(pid, len(file_paths)))
 	tot_count = len(file_paths)
 	count = 0
+	problem_index = 0
 	for file_path, res_path in file_paths:
 		count += 1
 		if count % 100 == 0:
@@ -164,6 +165,10 @@ def extract_on_paths(file_paths):
 			os.makedirs(os.path.dirname(res_path), exist_ok=True)
 			res.save(res_path)
 		except Exception:
+			ori_img = PIL.Image.open(file_path)
+			os.makedirs(os.path.dirname(res_path), exist_ok=True)
+			ori_img.save(res_path)
+			print('cant save', file_path,', hence save original image')
 			continue
 	print('\tDone!')
 
@@ -178,15 +183,18 @@ def parse_args():
 
 def run(args):
 	root_path = args.root_path
-	out_crops_path = root_path + '_aligned'
-	if not os.path.exists(out_crops_path):
-		os.makedirs(out_crops_path, exist_ok=True)
+	# root_path = '/mnt/nas3/users/chendapeng/results/results_mask/real_imgs'
+	# out_crops_path = '/mnt/nas7/users/chenyifei/data/results_mask/real_imgs' + '_aligned/'
+
+	root_path = '/mnt/nas3/users/chendapeng/results/results_mask/bi-layer'
+	out_crops_path = '/mnt/nas7/users/chenyifei/data/results_mask/bi-layer' + '_aligned/'
+	os.makedirs(out_crops_path, exist_ok=True)
 	file_paths = []
 	for root, dirs, files in os.walk(root_path):
 		for file in files:
 			file_path = os.path.join(root, file)
 			fname = os.path.join(out_crops_path, os.path.relpath(file_path, root_path))
-			res_path = '{}.jpg'.format(os.path.splitext(fname)[0])
+			res_path = '{}.png'.format(os.path.splitext(fname)[0])
 			if os.path.splitext(file_path)[1] == '.txt' or os.path.exists(res_path):
 				continue
 			file_paths.append((file_path, res_path))
