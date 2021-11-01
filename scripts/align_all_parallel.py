@@ -168,7 +168,7 @@ def extract_on_paths(file_paths):
 			ori_img = PIL.Image.open(file_path)
 			os.makedirs(os.path.dirname(res_path), exist_ok=True)
 			ori_img.save(res_path)
-			print('cant save', file_path,', hence save original image')
+			print('cant process ', file_path.split('/')[-1],', hence save original image')
 			continue
 	print('\tDone!')
 
@@ -183,21 +183,32 @@ def parse_args():
 
 def run(args):
 	root_path = args.root_path
+	# bilayer
+	# vox1
+	# root_path = '/mnt/nas3/users/chendapeng/results/results_mask/bilayer_new'
+	# out_crops_path = '/mnt/nas7/users/chenyifei/data/results_mask/bilayer_new' + '_aligned/'
+
 	# root_path = '/mnt/nas3/users/chendapeng/results/results_mask/real_imgs'
 	# out_crops_path = '/mnt/nas7/users/chenyifei/data/results_mask/real_imgs' + '_aligned/'
+	#
+	# # faceforensic
+	# root_path = '/mnt/nas3/users/chendapeng/results/results_foresnic_mask/bilayer_new'
+	# out_crops_path = '/mnt/nas7/users/chenyifei/data/results_foresnic_mask/bilayer_new' + '_aligned/'
+	#
+	root_path = '/mnt/nas3/users/chendapeng/results/results_foresnic_mask/real_imgs'
+	out_crops_path = '/mnt/nas7/users/chenyifei/data/results_foresnic_mask/real_imgs' + '_aligned/'
 
-	root_path = '/mnt/nas3/users/chendapeng/results/results_mask/bi-layer'
-	out_crops_path = '/mnt/nas7/users/chenyifei/data/results_mask/bi-layer' + '_aligned/'
 	os.makedirs(out_crops_path, exist_ok=True)
 	file_paths = []
-	for root, dirs, files in os.walk(root_path):
-		for file in files:
-			file_path = os.path.join(root, file)
-			fname = os.path.join(out_crops_path, os.path.relpath(file_path, root_path))
-			res_path = '{}.png'.format(os.path.splitext(fname)[0])
-			if os.path.splitext(file_path)[1] == '.txt' or os.path.exists(res_path):
-				continue
-			file_paths.append((file_path, res_path))
+	root_file_paths = sorted(data_utils.make_dataset(root_path))
+	n_frame = 0
+	for file_root_path in root_file_paths:
+		# print(file_root_path)
+		name = file_root_path.split('/')[-1]
+		res_path = os.path.join(out_crops_path,name)
+		file_paths.append((file_root_path, res_path))
+		n_frame += 1
+	print('total num of frames %d'%n_frame)
 
 	file_chunks = list(chunks(file_paths, int(math.ceil(len(file_paths) / args.num_threads))))
 	print(len(file_chunks))
