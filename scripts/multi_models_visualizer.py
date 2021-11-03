@@ -23,9 +23,10 @@ def generate_dirname(root):
 # FEI
 psp = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/fei_all_psp_50000/inference_results/'
 rar = '/mnt/nas6/users/xiesong/code/3D/Rotate-and-Render-master/FEI_results/rs_model/example/orig_rename'
-# our = '/mnt/nas7/datasets/public/CV/virtual_human/3dmmrt/experiments/generated/frontalization/3dmmrt_610e_1015/FEI_Face/'
-our = '/mnt/nas7/datasets/public/CV/virtual_human/3dmmrt/experiments/generated/frontalization/3dmmrt_symmetric_e220_1025/FEI_Face/'
-source = '/mnt/nas6/users/xiesong/data/3D/FEI_Face/test_data'
+our = '/mnt/nas7/datasets/public/CV/virtual_human/3dmmrt/experiments/generated/frontalization_cropped/3dmmrt_symmetric_e220_1025/FEI_Face/'
+# our = '/mnt/nas7/datasets/public/CV/virtual_human/3dmmrt/experiments/generated/frontalization_cropped/3dmmrt_128res_500e_1021/FEI_Face/'
+ # source = '/mnt/nas6/users/xiesong/data/3D/FEI_Face/test_data'
+source = '/mnt/nas7/users/zhousai/FEI_FACE/crop_image/'
 combine = '/mnt/nas7/users/chenyifei/data/paper_visualization/frontalization/FEI/'
 
 # FF
@@ -47,8 +48,8 @@ if __name__ == '__main__':
                 print('processing', fname)
             list_img=[
                 os.path.join(source,fname),
-                os.path.join(psp, fname),
-                os.path.join(rar, fname),
+                os.path.join(psp, fname.split('.')[0]+'.jpg'),
+                os.path.join(rar, fname.split('.')[0]+'.jpg'),
                 os.path.join(our, fname),
             ]
 
