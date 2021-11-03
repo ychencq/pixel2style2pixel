@@ -318,14 +318,15 @@ if __name__ == '__main__':
 
 
 	# yifei PsP
+	model_name = 'psp_50000'
 	# FEI
 	# gt_root = '/mnt/nas6/users/xiesong/data/3D/FEI_Face/test_data/'
 	# inference_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/fei_all_psp_50000/inference_results/'
 	# save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/fei_all_psp_50000/check_match/'
 	# FF
-	# gt_root = '/mnt/nas7/users/chenyifei/data/FaceForensics_test_frontal/'
-	# inference_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/FF_all_psp_500000/inference_results/'
-	# save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/FF_all_psp_500000/check_match/'
+	gt_root = '/mnt/nas7/users/chenyifei/data/FaceForensics_test_frontal/'
+	inference_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/FF_all_psp_50000/inference_results/'
+	save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/FF_all_psp_50000/check_match/'
 
 
 	# shiyong 3dmmrt
@@ -343,11 +344,11 @@ if __name__ == '__main__':
 	# shiyong new models
 
 	#3dmmrt_symmetric_e220_1025
-	model_name = '3dmmrt_symmetric_e220_1025'
+	# model_name = '3dmmrt_symmetric_e220_1025'
 	# FEI
-	gt_root = '/mnt/nas6/users/xiesong/data/3D/FEI_Face/test_data/'
-	inference_root = '/mnt/nas7/datasets/public/CV/virtual_human/3dmmrt/experiments/generated/frontalization/3dmmrt_symmetric_e220_1025/FEI_Face/'
-	save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/fei_all_3dmmrt_symmetric_e220_1025/check_match/'
+	# gt_root = '/mnt/nas6/users/xiesong/data/3D/FEI_Face/test_data/'
+	# inference_root = '/mnt/nas7/datasets/public/CV/virtual_human/3dmmrt/experiments/generated/frontalization/3dmmrt_symmetric_e220_1025/FEI_Face/'
+	# save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/fei_all_3dmmrt_symmetric_e220_1025/check_match/'
 	# FF
 	# gt_root = '/mnt/nas7/users/chenyifei/data/FaceForensics_test_frontal/'
 	# inference_root = '/mnt/nas7/datasets/public/CV/virtual_human/3dmmrt/experiments/generated/frontalization/3dmmrt_symmetric_e220_1025/FaceForensics/'
