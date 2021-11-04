@@ -82,7 +82,7 @@ def run(inference_root,gt_root,save_root,model_name):
 	avg_arc_id_score = 0
 	avg_curr_id_score = 0
 	sim_threshold = 0.6
-	angle_threshold = 15
+	angle_threshold = 10
 	total_moco_fit = 0
 	total_angle_fit = 0
 	total_curr_id_fit = 0
@@ -182,29 +182,29 @@ def run(inference_root,gt_root,save_root,model_name):
 			result_im, _ = mtcnn.align(result_im)  # align to (112,112)
 			result_im = facenet_id_transform(result_im).unsqueeze(0).cuda()
 
-			loss_moco, moco_sim_improvement, moco_logs = moco_loss_calculator(input_im, result_im, result_im)
+			# loss_moco, moco_sim_improvement, moco_logs = moco_loss_calculator(input_im, result_im, result_im)
 			arc_loss_id, arc_id_sim_improvement, id_logs = id_loss_calculator(input_im, result_im, result_im)
 
-			input_id = facenet(input_im)[0]
-			result_id = facenet(result_im)[0]
-			curr_id_score = float(input_id.dot(result_id))
+			# input_id = facenet(input_im)[0]
+			# result_id = facenet(result_im)[0]
+			# curr_id_score = float(input_id.dot(result_id))
 			# -----------------------------------------------------------------------------------
 			print('Sample {}:'.format(infer_name))
-			print('    Moco: score {:.4f} '.format(1-loss_moco.item() ))
+			# print('    Moco: score {:.4f} '.format(1-loss_moco.item() ))
 			print('    ArcId: Score {:.4f} '.format(1-arc_loss_id.item()))
-			print('    CurrId: Score {:.4f} '.format(curr_id_score))
+			# print('    CurrId: Score {:.4f} '.format(curr_id_score))
 
 			# metric cal
-			avg_moco_score += 1-loss_moco.item()
+			# avg_moco_score += 1-loss_moco.item()
 			avg_arc_id_score += 1-arc_loss_id.item()
-			avg_curr_id_score += curr_id_score
+			# avg_curr_id_score += curr_id_score
 			
-			if 1 - loss_moco.item() > sim_threshold:
-				moco_fit += 1
+			# if 1 - loss_moco.item() > sim_threshold:
+			# 	moco_fit += 1
 			if 1 - arc_loss_id.item() > sim_threshold:
 				arc_id_fit += 1
-			if curr_id_score > sim_threshold:
-				curr_id_fit += 1
+			# if curr_id_score > sim_threshold:
+			# 	curr_id_fit += 1
 
 		# img save for checking matching
 		gt_path = dataset.gt_paths[global_i]
@@ -275,24 +275,24 @@ def run(inference_root,gt_root,save_root,model_name):
 	print(model_name)
 	print('Total samples evaluated:{}'.format(global_i))
 	print('Threshold: SIM_Score {}   Angle {}'.format(sim_threshold,angle_threshold))
-	print('MOCO_SIM: {:.2f}%    Angle: {:.2f}%    Both: {:.2f}%'.format(total_moco_fit * 100 / global_i,
-																	  total_angle_fit * 100 / global_i,
-																	  total_MA_fit * 100 / global_i))
-	print('Avg moco_socre: {:.4f}'.format(avg_moco_score))
+	# print('MOCO_SIM: {:.2f}%    Angle: {:.2f}%    Both: {:.2f}%'.format(total_moco_fit * 100 / global_i,
+	# 																  total_angle_fit * 100 / global_i,
+	# 																  total_MA_fit * 100 / global_i))
+	# print('Avg moco_socre: {:.4f}'.format(avg_moco_score))
 
 	print('ArcFace ID_SIM: {:.2f}%    Angle: {:.2f}%    Both: {:.2f}%'.format(total_arc_id_fit * 100 / global_i,
 																	  total_angle_fit * 100 / global_i,
 																	  total_Arc_IA_fit * 100 / global_i))
 	print('Avg Arc id_score: {:.4f}'.format(avg_arc_id_score))
 
-	print('Curricular ID_SIM: {:.2f}%    Angle: {:.2f}%    Both: {:.2f}%'.format(total_curr_id_fit * 100 / global_i,
-																	  total_angle_fit * 100 / global_i,
-																	  total_Curr_IA_fit * 100 / global_i))
-	print('Avg Curricular id_score: {:.4f}'.format(avg_curr_id_score))
+	# print('Curricular ID_SIM: {:.2f}%    Angle: {:.2f}%    Both: {:.2f}%'.format(total_curr_id_fit * 100 / global_i,
+	# 																  total_angle_fit * 100 / global_i,
+	# 																  total_Curr_IA_fit * 100 / global_i))
+	# print('Avg Curricular id_score: {:.4f}'.format(avg_curr_id_score))
 
 
 if __name__ == '__main__':
-	os.environ["CUDA_VISIBLE_DEVICES"] = "4"
+	os.environ["CUDA_VISIBLE_DEVICES"] = "6"
 	# check psp size 不对应的情况下 计算正确性
 	# gt_root = '/mnt/nas7/users/chenyifei/data/ffhq_256_mini/'
 	# inference_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/ffhq256_testmini/inference_results/'
@@ -307,6 +307,7 @@ if __name__ == '__main__':
 
 	# xiesong RaR
 	# FEI
+	# model_name = 'RaR'
 	# gt_root = '/mnt/nas6/users/xiesong/data/3D/FEI_Face/test_data/'
 	# inference_root = '/mnt/nas6/users/xiesong/code/3D/Rotate-and-Render-master/FEI_results/rs_model/example/orig_rename/'
 	# inference_root = '/mnt/nas6/users/xiesong/code/3D/Rotate-and-Render-master/FEI_results/rs_model/example/aligned'
@@ -318,15 +319,15 @@ if __name__ == '__main__':
 
 
 	# yifei PsP
-	# model_name = 'psp_50000'
+	model_name = 'psp_500000'
 	# FEI
 	# gt_root = '/mnt/nas6/users/xiesong/data/3D/FEI_Face/test_data/'
 	# inference_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/fei_all_psp_50000/inference_results/'
 	# save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/fei_all_psp_50000/check_match/'
 	# FF
-	# gt_root = '/mnt/nas7/users/chenyifei/data/FaceForensics_test_frontal/'
-	# inference_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/FF_all_psp_50000/inference_results/'
-	# save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/FF_all_psp_50000/check_match/'
+	gt_root = '/mnt/nas7/users/chenyifei/data/FaceForensics_test_frontal/'
+	inference_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/FF_all_psp_500000/inference_results/'
+	save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/FF_all_psp_500000/check_match/'
 
 
 	# shiyong 3dmmrt
@@ -344,11 +345,11 @@ if __name__ == '__main__':
 	# shiyong new models
 
 	#3dmmrt_symmetric_e220_1025
-	model_name = '3dmmrt_symmetric_e220_1025'
+	# model_name = '3dmmrt_symmetric_e220_1025'
 	# FEI
 	# gt_root = '/mnt/nas6/users/xiesong/data/3D/FEI_Face/test_data/'
-	gt_root = '/mnt/nas7/users/zhousai/FEI_FACE/crop_image/'
-	inference_root = '/mnt/nas7/datasets/public/CV/virtual_human/3dmmrt/experiments/generated/frontalization_cropped/3dmmrt_symmetric_e220_1025/FEI_Face/'
+	# gt_root = '/mnt/nas7/users/zhousai/FEI_FACE/crop_image/'
+	# inference_root = '/mnt/nas7/datasets/public/CV/virtual_human/3dmmrt/experiments/generated/frontalization_cropped/3dmmrt_symmetric_e220_1025/FEI_Face/'
 	# save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/fei_crop_all_3dmmrt_symmetric_e220_1025/check_match/'
 	# FF
 	# gt_root = '/mnt/nas7/users/chenyifei/data/FaceForensics_test_frontal/'
@@ -380,13 +381,13 @@ if __name__ == '__main__':
 	# save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/FF_all_3dmmrt_610e_1015/check_match/'
 
 	# 3dmmrt_540e_1015
-	model_name = '3dmmrt_540e_1015'
-	# FEI
-	# gt_root = '/mnt/nas6/users/xiesong/data/3D/FEI_Face/test_data/'
-	gt_root = '/mnt/nas7/users/zhousai/FEI_FACE/crop_image/'
-	inference_root = '/mnt/nas7/datasets/public/CV/virtual_human/3dmmrt/experiments/generated/frontalization_cropped/3dmmrt_540e_1015/FEI_Face/'
-	save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/fei_crop_all_3dmmrt_540e_1015/check_match/'
-	# FF
+	# model_name = '3dmmrt_540e_1015'
+	# # FEI
+	# # gt_root = '/mnt/nas6/users/xiesong/data/3D/FEI_Face/test_data/'
+	# gt_root = '/mnt/nas7/users/zhousai/FEI_FACE/crop_image/'
+	# inference_root = '/mnt/nas7/datasets/public/CV/virtual_human/3dmmrt/experiments/generated/frontalization_cropped/3dmmrt_540e_1015/FEI_Face/'
+	# save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/fei_crop_all_3dmmrt_540e_1015/check_match/'
+	# # FF
 	# gt_root = '/mnt/nas7/users/chenyifei/data/FaceForensics_test_frontal/'
 	# inference_root = '/mnt/nas7/datasets/public/CV/virtual_human/3dmmrt/experiments/generated/frontalization/3dmmrt_540e_1015/FaceForensics/'
 	# save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/FF_all_3dmmrt_540e_1015/check_match/'
