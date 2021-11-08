@@ -9,25 +9,28 @@ def run(file_root,dest_dir_root,sample_rate):
     floder_set = {}
     for i,image_path in enumerate(image_paths):
         image_path = image_path.split('\n')[0]
-        path_parts = image_path.split('/')
-        sub_dir = path_parts[-2]
-        if sub_dir not in floder_set:
-            floder_set[sub_dir] = 0
-        else:
-            if i % sample_rate != 0 or floder_set[sub_dir] >= 10:
-                continue
-        print('processing',image_path)
-        img = Image.open(image_path)
-        save_name = path_parts[-2]+'_'+path_parts[-1]
-        save_path = os.path.join(dest_dir_root,save_name)
+        # path_parts = image_path.split('/')
+        # sub_dir = path_parts[-2]
+        # if sub_dir not in floder_set:
+        #     floder_set[sub_dir] = 0
+        # else:
+        #     if i % sample_rate != 0 or floder_set[sub_dir] >= 10:
+        #         continue
+        if i%100 != 0:
+            continue
+        im_path = os.path.join('/mnt/nas3/users/chendapeng/results/results_mask/real_imgs/',image_path)
+        print('processing',im_path)
+        img = Image.open(im_path)
+        # save_name = path_parts[-2]+'_'+path_parts[-1]
+        save_path = os.path.join(dest_dir_root,image_path)
         img.save(save_path)
-        floder_set[sub_dir] = floder_set[sub_dir]+1
+        # floder_set[sub_dir] = floder_set[sub_dir]+1
         count += 1
     print('Successfully read and save %d images'%count)
 
 
 if __name__ == '__main__':
-    sample_rate = 50
-    file_root = "/mnt/nas7/users/zhousai/FaceForensics/faceforensics_large_angle_pose.txt"
-    dest_dir_root = '/mnt/nas7/users/chenyifei/data/FaceForensics_test_frontal/'
+    sample_rate = 10
+    file_root = "/mnt/nas7/users/chenyifei/data/rotate_vox1_gt.txt"
+    dest_dir_root = '/mnt/nas6/users/xiesong/data/3D/FEI_Face/rotate_vox1_gt'
     run(file_root,dest_dir_root,sample_rate)
