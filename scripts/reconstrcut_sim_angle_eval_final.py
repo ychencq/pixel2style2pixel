@@ -210,9 +210,9 @@ def run(inference_root,gt_root,save_root):
 if __name__ == '__main__':
 	os.environ["CUDA_VISIBLE_DEVICES"] = "5"
 	# check psp size 不对应的情况下 计算正确性
-	gt_root = '/mnt/nas7/users/chenyifei/data/ffhq_256_mini/'
-	inference_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/ffhq256_testmini/inference_results/'
-	save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/ffhq256_testmini/check_match/'
+	# gt_root = '/mnt/nas7/users/chenyifei/data/ffhq_256_mini/'
+	# inference_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/ffhq256_testmini/inference_results/'
+	# save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/ffhq256_testmini/check_match/'
 	#
 
 	# check 指标计算正确性
@@ -222,9 +222,9 @@ if __name__ == '__main__':
 
 
 	# xiesong RaR
-	# gt_root = '/mnt/nas6/users/xiesong/data/3D/FEI_Face/test_gt/'
-	# inference_root = '/mnt/nas6/users/xiesong/code/3D/Rotate-and-Render-master/FEI_results/rs_model/example/orig_rename/'
-	# save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/fei_all_RaR/check_match/'
+	gt_root = '/mnt/nas6/users/xiesong/data/3D/FEI_Face/test_gt/'
+	inference_root = '/mnt/nas6/users/xiesong/code/3D/Rotate-and-Render-master/FEI_results/rs_model/example/orig_rename/'
+	save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/fei_all_RaR/check_match/'
 
 
 	# yifei PsP
