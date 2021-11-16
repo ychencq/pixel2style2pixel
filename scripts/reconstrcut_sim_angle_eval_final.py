@@ -222,9 +222,9 @@ if __name__ == '__main__':
 
 
 	# xiesong RaR
-	gt_root = '/mnt/nas6/users/xiesong/data/3D/FEI_Face/test_gt/'
-	inference_root = '/mnt/nas6/users/xiesong/code/3D/Rotate-and-Render-master/FEI_results/rs_model/example/orig_rename/'
-	save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/fei_all_RaR/check_match/'
+	# gt_root = '/mnt/nas6/users/xiesong/data/3D/FEI_Face/test_gt/'
+	# inference_root = '/mnt/nas6/users/xiesong/code/3D/Rotate-and-Render-master/FEI_results/rs_model/example/orig_rename/'
+	# save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/fei_all_RaR/check_match/'
 
 
 	# yifei PsP
@@ -234,9 +234,9 @@ if __name__ == '__main__':
 
 
 	# shiyong 3dmmrt
-	# gt_root = '/mnt/nas6/users/xiesong/data/3D/FEI_Face/test_gt/'
-	# inference_root = '/mnt/nas7/users/chenyifei/code/humanface/mmgeneration/frontalization_experiment/fei_test_all/inference_results/'
-	# save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/fei_all_3dmmrt/check_match/'
+	gt_root = '/mnt/nas6/users/xiesong/data/3D/FEI_Face/test_gt/'
+	inference_root = '/mnt/nas7/users/chenyifei/code/humanface/mmgeneration/frontalization_experiment/fei_test_all/inference_results/'
+	save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/fei_all_3dmmrt/check_match/'
 
 	# yifei x2face -- pose2face ?
 	run(inference_root,gt_root,save_root)
