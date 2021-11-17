@@ -227,6 +227,7 @@ if __name__ == '__main__':
 	# save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/fei_all_RaR/check_match/'
 
 
+
 	# yifei PsP
 	# gt_root = '/mnt/nas6/users/xiesong/data/3D/FEI_Face/test_gt/'
 	# inference_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/fei_all_psp_200000/inference_results/'
