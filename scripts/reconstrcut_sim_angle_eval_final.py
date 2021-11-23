@@ -216,9 +216,9 @@ if __name__ == '__main__':
 	#
 
 	# check 指标计算正确性
-	# gt_root = '/mnt/nas6/users/xiesong/data/3D/FEI_Face/test_gt/'
-	# inference_root = '/mnt/nas6/users/xiesong/data/3D/FEI_Face/test_data/'
-	# save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/fei_all_ValidateAlgo/check_match/'
+	gt_root = '/mnt/nas6/users/xiesong/data/3D/FEI_Face/test_gt/'
+	inference_root = '/mnt/nas6/users/xiesong/data/3D/FEI_Face/test_data/'
+	save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/fei_all_ValidateAlgo/check_match/'
 
 
 	# xiesong RaR
@@ -229,10 +229,10 @@ if __name__ == '__main__':
 
 
 	# yifei PsP
-	gt_root = '/mnt/nas6/users/xiesong/data/3D/FEI_Face/test_gt/'
-	inference_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/fei_all_psp_200000/inference_results/'
-	save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/fei_all_psp_200000/check_match/'
-
+	# gt_root = '/mnt/nas6/users/xiesong/data/3D/FEI_Face/test_gt/'
+	# inference_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/fei_all_psp_200000/inference_results/'
+	# save_root = '/mnt/nas7/users/chenyifei/code/humanface/pixel2style2pixel/experiment/fei_all_psp_200000/check_match/'
+	#
 
 	# shiyong 3dmmrt
 	# gt_root = '/mnt/nas6/users/xiesong/data/3D/FEI_Face/test_gt/'
