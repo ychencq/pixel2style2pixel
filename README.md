@@ -1,3 +1,110 @@
+## pip list
+absl-py                0.14.1
+
+blurhash               1.1.4
+
+boost                  0.1
+
+cachetools             4.2.4
+
+certifi                2021.5.30
+
+charset-normalizer     2.0.7
+
+cmake                  3.21.3
+
+cycler                 0.10.0
+
+dataclasses            0.8
+
+decorator              5.1.0
+
+dill                   0.3.4
+
+future                 0.18.2
+
+google-auth            1.35.0
+
+google-auth-oauthlib   0.4.6
+
+greenlet               1.1.2
+
+grpcio                 1.41.0
+
+idna                   3.3
+
+importlib-metadata     4.8.1
+
+kiwisolver             1.3.1
+
+Markdown               3.3.4
+
+Mastodon.py            1.5.1
+
+matplotlib             3.2.1
+
+numpy                  1.18.4
+
+oauthlib               3.1.1
+
+opencv-python          4.2.0.34
+
+panda                  0.3.1
+
+pandas                 1.1.5
+
+Pillow                 7.1.2
+
+pip                    20.0.2
+
+protobuf               3.18.1
+
+pyasn1                 0.4.8
+
+pyasn1-modules         0.2.8
+
+pyparsing              2.4.7
+
+python-dateutil        2.8.2
+
+python-magic           0.4.24
+
+pytz                   2021.3
+
+requests               2.26.0
+
+requests-oauthlib      1.3.0
+
+rsa                    4.7.2
+
+scipy                  1.4.1
+
+setuptools             46.4.0.post20200518
+
+six                    1.16.0
+
+SQLAlchemy             1.4.25
+
+tensorboard            2.2.1
+
+tensorboard-plugin-wit 1.8.0
+
+torch                  1.6.0
+
+torchvision            0.4.2
+
+tqdm                   4.46.0
+
+typing-extensions      3.10.0.2
+
+urllib3                1.26.7
+
+Werkzeug               2.0.2
+
+wheel                  0.34.2
+
+zipp                   3.6.0
+
 # Encoding in Style: a StyleGAN Encoder for Image-to-Image Translation
 <a href="https://arxiv.org/abs/2008.00951"><img src="https://img.shields.io/badge/arXiv-2008.00951-b31b1b.svg" height=22.5></a>
 <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" height=22.5></a>  
