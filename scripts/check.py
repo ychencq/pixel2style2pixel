@@ -1,3 +1,7 @@
+'''
+irrelevant file, only for RAR method:  mutliple_test.py     plz ignore when working about current project
+'''
+
 import torch.multiprocessing as multiprocessing
 multiprocessing.set_start_method('spawn', force=True)
 from models.networks.sync_batchnorm import DataParallelWithCallback
@@ -37,15 +41,14 @@ def create_paths(save_path, img_path, foldername='orig', folderlevel=2, pose='0'
         if level == len(path_split) - 1:
             file_name = str(pose) + '_' + file_name
         rotated_file_savepath = os.path.join(rotated_file_savepath, file_name)
-
     # ---- Below are fixed for CVPR 2022 rebuttal
     ori_img_name = rotated_file_savepath.split('/')[-1]
-    rotated_file_savepath.replace(ori_img_name,'')
+    rotated_file_savepath = rotated_file_savepath.replace(ori_img_name,'')
     parts = ori_img_name.split('yaw_0.0_')[1].split('.npy_')
     rotated_file_savepath = os.path.join(rotated_file_savepath,parts[0])
     os.makedirs(rotated_file_savepath,exist_ok=True)
     return os.path.join(rotated_file_savepath,parts[1])
-    # return rotated_file_savepath
+    return rotated_file_savepath
 
 def affine_align(img, landmark=None, **kwargs):
     M = None
@@ -183,7 +186,6 @@ if __name__ == '__main__':
                     rotated_keypoints = landmark_68_to_5(rotated_landmarks[b])
                     # get savepaths
                     rotated_file_savepath = create_paths(save_paths[n], img_path[b], folderlevel=folderlevel, pose=poses[b])
-
                     image_numpy = save_img(generate_rotateds[n][b], rotated_file_savepath)
                     rotated_keypoints_str = rotated_file_savepath + ' 1 ' + ' '.join([str(int(n)) for n in rotated_keypoints]) + '\n'
                     print('process image...' + rotated_file_savepath)
